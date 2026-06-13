@@ -6,22 +6,39 @@ public class PlayerController : MonoBehaviour
 	[Header("References")]
 	public Transform centerPoint;
 	public Transform cameraTransform;
-	public PlayerInput playerInput;
+	public PlayerInput playerInput; 
+	private Rigidbody rb;
 
 	[Header("Movement Settings")]
 	public float moveSpeed = 7f;
 	public float rotationSpeed = 15f;
+	public float airControlFactor = 0.4f;
+
+	[Header("Jump Settings")]
+	public float jumpForce = 6f;    
+	public float groundCheckDistance = 0.2f;
+	public float fallMultiplier = 2.5f; 
+	public float JumpCutoff = 2f;
+	private bool isGrounded;
+	public LayerMask groundLayer;  
 
 	[Header("Camera Settings")]
 	public float cameraDistance = 8f;
 	public float cameraHeight = 3.5f;
 
-	private InputAction moveAction;
+	private InputAction moveAction; 
+	private InputAction jumpAction;
 	private Vector2 moveInput;
 	private bool isFinalBoss = false;
 
 	void Start()
 	{
+		//Rb setup
+		rb = GetComponent<Rigidbody>();
+		rb.freezeRotation = true;
+		rb.useGravity = true;
+		rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+
 		if (playerInput == null)
 			playerInput = GetComponent<PlayerInput>();
 
@@ -30,62 +47,118 @@ public class PlayerController : MonoBehaviour
 
 		if (playerInput != null && playerInput.actions != null)
 		{
-			moveAction = playerInput.actions.FindAction("Move");
+			moveAction = playerInput.actions.FindAction("Move"); 
+			jumpAction = playerInput.actions.FindAction("Jump");
 		}
+
+		//Placeholder
+		isFinalBoss = true;
 	}
 
 	void Update()
 	{
 		if (moveAction == null || cameraTransform == null || centerPoint == null) return;
 
-		// 1. Get Input
+		//Get Input
 		moveInput = moveAction.ReadValue<Vector2>();
 
-		// 2. Get camera directions (flattened)
+		HandleJump();
+		HandleCameraAndRotation();
+	}
+
+	void FixedUpdate()
+	{
+		GroundCheck();
+		HandleLocomotion(); 
+		ApplyJumpGravity();
+	}
+
+	void GroundCheck()
+	{
+		//Raycast for ground check
+		isGrounded = Physics.Raycast(transform.position, Vector3.down, groundCheckDistance, groundLayer);
+	}
+
+	void HandleCameraAndRotation()
+	{
 		Vector3 camForward = cameraTransform.forward;
 		Vector3 camRight = cameraTransform.right;
-
 		camForward.y = 0f;
 		camRight.y = 0f;
 		camForward.Normalize();
 		camRight.Normalize();
-
 		Vector3 movementDirection = (camForward * moveInput.y) + (camRight * moveInput.x);
 
-		//Move player
-		transform.position += movementDirection * moveSpeed * Time.deltaTime;
-
-		//Rotate player toward movement dir
 		if (movementDirection.sqrMagnitude > 0.001f)
 		{
 			Quaternion targetRotation = Quaternion.LookRotation(movementDirection);
-			transform.rotation = Quaternion.Slerp(
-				transform.rotation,
-				targetRotation,
-				rotationSpeed * Time.deltaTime
-			);
+			transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
 		}
 
-		//Placeholderfor final boss cam behaviour
-		isFinalBoss = true;
 		if (isFinalBoss)
 		{
-			UpdateCameraPosition();
+			UpdateCameraPositionBoss();
 		}
 	}
 
-	void UpdateCameraPosition()
+	void UpdateCameraPositionBoss()
 	{
-		// Get line from center through player
 		Vector3 centerToPlayer = transform.position - centerPoint.position;
-		centerToPlayer.y = 0f; 
+		centerToPlayer.y = 0f;
 		centerToPlayer.Normalize();
 
+		// Position camera behind player
 		Vector3 targetCamPos = transform.position + (centerToPlayer * cameraDistance);
+
 		targetCamPos.y = transform.position.y + cameraHeight;
 		cameraTransform.position = targetCamPos;
 
 		Vector3 lookTarget = new Vector3(centerPoint.position.x, transform.position.y, centerPoint.position.z);
 		cameraTransform.LookAt(lookTarget);
+	}
+
+	void HandleLocomotion()
+	{
+		Vector3 camForwardHorizontal = Vector3.ProjectOnPlane(cameraTransform.forward, Vector3.up).normalized;
+		Vector3 camRightHorizontal = Vector3.ProjectOnPlane(cameraTransform.right, Vector3.up).normalized;
+
+		Vector3 movementDirection = (camForwardHorizontal * moveInput.y) + (camRightHorizontal * moveInput.x);
+		if (movementDirection.magnitude > 1f) movementDirection.Normalize();
+
+		float currentSpeed = isGrounded ? moveSpeed : (moveSpeed * airControlFactor);
+		Vector3 targetVelocity = movementDirection * currentSpeed;
+
+		if (!isGrounded && movementDirection.sqrMagnitude < 0.001f)
+		{
+			targetVelocity.x = rb.linearVelocity.x;
+			targetVelocity.z = rb.linearVelocity.z;
+		}
+
+		targetVelocity.y = rb.linearVelocity.y;
+		rb.linearVelocity = targetVelocity;
+	}
+
+	void ApplyJumpGravity()
+	{
+		if (isGrounded) return;
+
+		//Standard fall
+		if (rb.linearVelocity.y < 0)
+		{
+			rb.AddForce(Vector3.down * (fallMultiplier - 1) * Physics.gravity.magnitude, ForceMode.Acceleration);
+		}
+		//Cutoff fall on jump release
+		else if (rb.linearVelocity.y > 0 && jumpAction != null && !jumpAction.IsPressed())
+		{
+			rb.AddForce(Vector3.down * (JumpCutoff - 1) * Physics.gravity.magnitude, ForceMode.Acceleration);
+		}
+	}
+
+	void HandleJump()
+	{
+		if (isGrounded && jumpAction != null && jumpAction.WasPressedThisFrame())
+		{
+			rb.AddForce(Vector3.up * jumpForce, ForceMode.VelocityChange);
+		}
 	}
 }
