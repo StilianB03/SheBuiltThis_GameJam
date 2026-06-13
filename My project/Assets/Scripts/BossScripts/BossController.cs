@@ -34,7 +34,6 @@ public class BossController : MonoBehaviour
 	public Transform playerTransform;
 
 	private bool isTurning = false;
-	private bool isHiding = false; 
 	private float targetHeight;
 	private float yVelocity; 
 	private float stateTimer;
