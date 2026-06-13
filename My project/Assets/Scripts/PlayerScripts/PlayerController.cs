@@ -65,7 +65,6 @@ public class PlayerController : MonoBehaviour
 			if (shootAction != null)
 			{
 				shootAction.Enable();
-				shootAction.performed += ctx => Shoot();
 			}
 		}
 
@@ -207,5 +206,20 @@ public class PlayerController : MonoBehaviour
 		{
 			Instantiate(projectilePrefab, shootPoint.position, shootPoint.rotation);
 		}
+	}
+
+	private void OnEnable()
+	{
+		if (shootAction != null) shootAction.performed += OnShootPerformed;
+	}
+
+	private void OnDisable()
+	{
+		if (shootAction != null) shootAction.performed -= OnShootPerformed;
+	}
+
+	private void OnShootPerformed(InputAction.CallbackContext ctx)
+	{
+		Shoot();
 	}
 }
