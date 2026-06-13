@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.VFX;
+using System;
 
 public class BossController : MonoBehaviour
 {
@@ -6,6 +8,10 @@ public class BossController : MonoBehaviour
 	public enum BossAttack { None, LaserSpin, NormalAttack2, UpAttack1, UpAttack2 }
 	public BossState currentState = BossState.Normal;
 	private BossAttack currentAttack = BossAttack.None;
+
+	[Header("Health")]
+	public float maxHealth = 1000f;
+	public float currentHealth = 1000f;
 
 	[Header("Rotation Settings")]
     public float rotationSpeed = 20f; 
@@ -45,7 +51,8 @@ public class BossController : MonoBehaviour
 	public int minRotationCount = 1;
 	public int maxRotationCount = 3;
 	private float spinDirection = 1f;
-	public GameObject laserTriggerCollider;
+	public GameObject laserTriggerCollider; 
+	public VisualEffect laserVfx;
 
 	[Header("References")]
 	public Transform playerTransform;
@@ -60,13 +67,14 @@ public class BossController : MonoBehaviour
 
 
 	private float laserSpinLeft = 0f;
+	public static event Action<float, float> OnHealthChanged;
 
 	// START //
 	void Start()
     {
         //Ensure we find player
         if (playerTransform == null) {
-			PlayerController playerScript = Object.FindFirstObjectByType<PlayerController>();
+			PlayerController playerScript = UnityEngine.Object.FindFirstObjectByType<PlayerController>();
 
 			if (playerScript != null)
 			{
@@ -76,6 +84,12 @@ public class BossController : MonoBehaviour
 
 		if (laserTriggerCollider != null)
 			laserTriggerCollider.SetActive(false);
+
+		if (laserVfx != null)
+			laserVfx.Stop();
+
+		currentHealth = maxHealth;
+		OnHealthChanged?.Invoke(currentHealth, maxHealth);
 
 		EnterState(currentState);
 		targetHeight = transform.position.y;
@@ -154,7 +168,7 @@ public class BossController : MonoBehaviour
 		if (currentState == BossState.Normal)
 		{
 			float totalWeight = normalToHidden + normalToUp;
-			float roll = Random.Range(0f, totalWeight);
+			float roll = UnityEngine.Random.Range(0f, totalWeight);
 
 			if (roll <= normalToHidden)
 			{
@@ -179,17 +193,17 @@ public class BossController : MonoBehaviour
 		{
 			case BossState.Normal:
 				targetHeight = normalHeight;
-				stateTimer = Random.Range(minNormalTime, maxNormalTime);
+				stateTimer = UnityEngine.Random.Range(minNormalTime, maxNormalTime);
 				break;
 
 			case BossState.Hidden:
 				targetHeight = hiddenHeight;
-				stateTimer = Random.Range(minHiddenTime, maxHiddenTime);
+				stateTimer = UnityEngine.Random.Range(minHiddenTime, maxHiddenTime);
 				break;
 
 			case BossState.Up:
 				targetHeight = upHeight;
-				stateTimer = Random.Range(minUpTime, maxUpTime);
+				stateTimer = UnityEngine.Random.Range(minUpTime, maxUpTime);
 				break;
 		}
 	}
@@ -230,7 +244,7 @@ public class BossController : MonoBehaviour
 		{
 			case BossState.Normal:
 				totalWeight = laserAttackChance + normalAttack2Chance; 
-				roll = Random.Range(0f, totalWeight);
+				roll = UnityEngine.Random.Range(0f, totalWeight);
 				if (roll <= laserAttackChance)
 				{
 					TriggerLaserAttack();
@@ -243,7 +257,7 @@ public class BossController : MonoBehaviour
 
 			case BossState.Up:
 				totalWeight = upAttack1Chance + upAttack2Chance;
-				roll = Random.Range(0f, totalWeight);
+				roll = UnityEngine.Random.Range(0f, totalWeight);
 				if (roll <= upAttack1Chance)
 				{
 					TriggerUpAttack1();
@@ -267,9 +281,12 @@ public class BossController : MonoBehaviour
 	{
 		currentAttack = BossAttack.LaserSpin; 
 
-		int rotations = Random.Range(minRotationCount, maxRotationCount + 1);
+		int rotations = UnityEngine.Random.Range(minRotationCount, maxRotationCount + 1);
 		laserSpinLeft = rotations * 360f;
-		spinDirection = (Random.value > 0.5f) ? 1f : -1f;
+		spinDirection = (UnityEngine.Random.value > 0.5f) ? 1f : -1f;
+
+		if (laserVfx != null)
+			laserVfx.Play();
 
 		if (laserTriggerCollider != null)
 			laserTriggerCollider.SetActive(true);
@@ -309,6 +326,10 @@ public class BossController : MonoBehaviour
 					{
 						if (laserTriggerCollider != null)
 							laserTriggerCollider.SetActive(false);
+
+						if (laserVfx != null)
+							laserVfx.SendEvent("StopLaser");
+							laserVfx.Stop();
 
 						OnAttackComplete();
 					}

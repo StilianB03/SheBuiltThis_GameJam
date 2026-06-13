@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.InputSystem;
+using System;
 
 public class PlayerController : MonoBehaviour
 {
@@ -20,7 +21,11 @@ public class PlayerController : MonoBehaviour
 	public float fallMultiplier = 2.5f; 
 	public float JumpCutoff = 2f;
 	private bool isGrounded;
-	public LayerMask groundLayer;  
+	public LayerMask groundLayer;
+
+	[Header("Health Settings")]
+	public float maxHealth = 100f;
+	private float currentHealth = 100f;
 
 	[Header("Camera Settings")]
 	public float cameraDistance = 8f;
@@ -30,6 +35,8 @@ public class PlayerController : MonoBehaviour
 	private InputAction jumpAction;
 	private Vector2 moveInput;
 	private bool isFinalBoss = false;
+
+	public static event Action<float, float> OnHealthChanged;
 
 	void Start()
 	{
@@ -50,6 +57,9 @@ public class PlayerController : MonoBehaviour
 			moveAction = playerInput.actions.FindAction("Move"); 
 			jumpAction = playerInput.actions.FindAction("Jump");
 		}
+
+		currentHealth = maxHealth;
+		OnHealthChanged?.Invoke(currentHealth, maxHealth);
 
 		//Placeholder
 		isFinalBoss = true;
@@ -160,5 +170,22 @@ public class PlayerController : MonoBehaviour
 		{
 			rb.AddForce(Vector3.up * jumpForce, ForceMode.VelocityChange);
 		}
+	}
+
+	// HEALTH HANDLING//
+	public void TakeDamage(float damageAmount)
+	{
+		currentHealth = Mathf.Clamp(currentHealth - damageAmount, 0f, maxHealth);
+		OnHealthChanged?.Invoke(currentHealth, maxHealth);
+
+		if (currentHealth <= 0f)
+		{
+			Die();
+		}
+	}
+
+	private void Die()
+	{
+		Debug.Log("Its okay to die");
 	}
 }
