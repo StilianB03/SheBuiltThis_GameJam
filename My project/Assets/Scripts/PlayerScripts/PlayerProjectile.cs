@@ -5,6 +5,7 @@ public class Projectile : MonoBehaviour
 {
 	public float speed = 20f;
 	public float lifetime = 3f;
+	public float bulletDmg = 7.5f;
 	public VisualEffect vfx;
 
 	void Start()
@@ -23,8 +24,16 @@ public class Projectile : MonoBehaviour
 
 	private void OnTriggerEnter(Collider other)
 	{
-		Debug.Log("Hit: " + other.name);
+		BossController boss = other.GetComponentInParent<BossController>();
 
-		Destroy(gameObject);
+		if (boss != null)
+		{
+			if (other == boss.hitbox1 || other == boss.hitbox2)
+			{
+				boss.TakeDamage(bulletDmg);
+				Debug.Log("Boss HIT!");
+				Destroy(gameObject);
+			}
+		}
 	}
 }

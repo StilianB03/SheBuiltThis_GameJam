@@ -9,6 +9,10 @@ public class BossController : MonoBehaviour
 	public BossState currentState = BossState.Normal;
 	private BossAttack currentAttack = BossAttack.None;
 
+	[Header("Hitboxes")]
+	public Collider hitbox1;
+	public Collider hitbox2;
+
 	[Header("Health")]
 	public float maxHealth = 1000f;
 	public float currentHealth = 1000f;
@@ -352,5 +356,22 @@ public class BossController : MonoBehaviour
 			default:
 				break;
 		}
+	}
+
+	// DAMAGE HANDLING //
+	public void TakeDamage(float damageAmount)
+	{
+		currentHealth = Mathf.Clamp(currentHealth - damageAmount, 0f, maxHealth);
+		OnHealthChanged?.Invoke(currentHealth, maxHealth);
+
+		if (currentHealth <= 0f)
+		{
+			Die();
+		}
+	}
+
+	private void Die()
+	{
+		Debug.Log("Boss dead??");
 	}
 }
