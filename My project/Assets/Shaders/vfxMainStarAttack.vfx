@@ -111,7 +111,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7d4c867f6b72b714dbb5fd1780afe208, type: 3}
-  m_Name: vfxBrimstone
+  m_Name: vfxMainStarAttack
   m_EditorClassIdentifier: 
   m_UIIgnoredErrors: []
   m_Parent: {fileID: 0}
@@ -183,7 +183,7 @@ VisualEffectResource:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: vfxBrimstone
+  m_Name: vfxMainStarAttack
   m_Graph: {fileID: 114350483966674976}
   m_Infos:
     m_RendererSettings:
@@ -1448,7 +1448,7 @@ MonoBehaviour:
       m_Type:
         m_SerializableType: UnityEngine.Color, UnityEngine.CoreModule, Version=0.0.0.0,
           Culture=neutral, PublicKeyToken=null
-      m_SerializableObject: '{"r":4.287093639373779,"g":1.4169368743896485,"b":0.4718494415283203,"a":1.0}'
+      m_SerializableObject: '{"r":0.060586117208004,"g":6.422234058380127,"b":6.158733367919922,"a":1.0}'
     m_Space: -1
   m_Property:
     name: _Color
@@ -3299,7 +3299,7 @@ MonoBehaviour:
   - {fileID: 8926484042661617647}
   - {fileID: 8926484042661617648}
   m_UIPosition: {x: 0, y: 0}
-  m_UICollapsed: 0
+  m_UICollapsed: 1
   m_UISuperCollapsed: 0
   m_MasterSlot: {fileID: 8926484042661617644}
   m_MasterData:
@@ -3308,7 +3308,7 @@ MonoBehaviour:
       m_Type:
         m_SerializableType: UnityEngine.Color, UnityEngine.CoreModule, Version=0.0.0.0,
           Culture=neutral, PublicKeyToken=null
-      m_SerializableObject: '{"r":0.33955228328704836,"g":0.10471021384000778,"b":0.05872754007577896,"a":1.0}'
+      m_SerializableObject: '{"r":0.11758603900671005,"g":0.08909846842288971,"b":0.3333333134651184,"a":1.0}'
     m_Space: -1
   m_Property:
     name: _Color
@@ -5608,7 +5608,7 @@ MonoBehaviour:
   - {fileID: 8926484042661617736}
   - {fileID: 8926484042661617737}
   m_UIPosition: {x: 0, y: 0}
-  m_UICollapsed: 1
+  m_UICollapsed: 0
   m_UISuperCollapsed: 0
   m_MasterSlot: {fileID: 8926484042661617733}
   m_MasterData:
@@ -5617,7 +5617,7 @@ MonoBehaviour:
       m_Type:
         m_SerializableType: UnityEngine.Color, UnityEngine.CoreModule, Version=0.0.0.0,
           Culture=neutral, PublicKeyToken=null
-      m_SerializableObject: '{"r":27.5327205657959,"g":1.9542851448059083,"b":0.0,"a":1.0}'
+      m_SerializableObject: '{"r":6.7134575843811039,"g":9.734285354614258,"b":0.6428288221359253,"a":1.0}'
     m_Space: -1
   m_Property:
     name: _FresnelColor
@@ -7479,7 +7479,7 @@ MonoBehaviour:
       m_Type:
         m_SerializableType: UnityEngine.Color, UnityEngine.CoreModule, Version=0.0.0.0,
           Culture=neutral, PublicKeyToken=null
-      m_SerializableObject: '{"r":7.949685096740723,"g":0.22498972713947297,"b":0.22498972713947297,"a":1.0}'
+      m_SerializableObject: '{"r":6.498019218444824,"g":0.5241901278495789,"b":0.0,"a":1.0}'
     m_Space: -1
   m_Property:
     name: _Color
