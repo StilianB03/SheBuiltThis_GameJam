@@ -7,7 +7,7 @@ public class PlayerController : MonoBehaviour
 	[Header("References")]
 	public Transform centerPoint;
 	public Transform cameraTransform;
-	public PlayerInput playerInput; 
+	public PlayerInput playerInput;
 	private Rigidbody rb;
 
 	[Header("Movement Settings")]
@@ -16,9 +16,9 @@ public class PlayerController : MonoBehaviour
 	public float airControlFactor = 0.4f;
 
 	[Header("Jump Settings")]
-	public float jumpForce = 6f;    
+	public float jumpForce = 6f;
 	public float groundCheckDistance = 0.2f;
-	public float fallMultiplier = 2.5f; 
+	public float fallMultiplier = 2.5f;
 	public float JumpCutoff = 2f;
 	private bool isGrounded;
 	public LayerMask groundLayer;
@@ -32,16 +32,26 @@ public class PlayerController : MonoBehaviour
 	public float cameraHeight = 3.5f;
 
 	[Header("Shooting Settings")]
-	public GameObject projectilePrefab;
-	public Transform shootPoint; 
+	public ProjectileData projectileData;
+	public Transform shootPoint;
 	private InputAction shootAction;
 
-	private InputAction moveAction; 
+	private InputAction moveAction;
 	private InputAction jumpAction;
 	private Vector2 moveInput;
 	private bool isFinalBoss = false;
 
 	public static event Action<float, float> OnHealthChanged;
+
+	private void Awake()
+	{
+		if (playerInput == null)
+			playerInput = GetComponent<PlayerInput>();
+
+		moveAction = playerInput.actions.FindAction("Move");
+		jumpAction = playerInput.actions.FindAction("Jump");
+		shootAction = playerInput.actions.FindAction("Shoot");
+	}
 
 	void Start()
 	{
@@ -56,17 +66,6 @@ public class PlayerController : MonoBehaviour
 
 		if (cameraTransform == null && Camera.main != null)
 			cameraTransform = Camera.main.transform;
-
-		if (playerInput != null && playerInput.actions != null)
-		{
-			moveAction = playerInput.actions.FindAction("Move"); 
-			jumpAction = playerInput.actions.FindAction("Jump"); 
-			shootAction = playerInput.actions.FindAction("Shoot");
-			if (shootAction != null)
-			{
-				shootAction.Enable();
-			}
-		}
 
 		currentHealth = maxHealth;
 		OnHealthChanged?.Invoke(currentHealth, maxHealth);
@@ -89,7 +88,7 @@ public class PlayerController : MonoBehaviour
 	void FixedUpdate()
 	{
 		GroundCheck();
-		HandleLocomotion(); 
+		HandleLocomotion();
 		ApplyJumpGravity();
 	}
 
@@ -202,20 +201,50 @@ public class PlayerController : MonoBehaviour
 	// SHOOTING //
 	void Shoot()
 	{
-		if (projectilePrefab != null && shootPoint != null)
+		Debug.Log("Shoot() called");
+
+		Debug.Log($"projectileData = {projectileData}");
+		Debug.Log($"shootPoint = {shootPoint}");
+		Debug.Log($"Prefab = {projectileData.projectilePrefab}");
+		if (projectileData?.projectilePrefab != null && shootPoint != null)
 		{
-			Instantiate(projectilePrefab, shootPoint.position, shootPoint.rotation);
+			Debug.Log("Creating projectile");
+
+			GameObject bulletObj = Instantiate(
+				projectileData.projectilePrefab,
+				shootPoint.position,
+				shootPoint.rotation);
+
+			Projectile projectileScript = bulletObj.GetComponent<Projectile>();
+
+			if (projectileScript != null)
+			{
+				Debug.Log("Projectile script found");
+				projectileScript.Initialize(projectileData.speed);
+			}
+			else
+			{
+				Debug.Log("Projectile script MISSING");
+			}
 		}
 	}
 
 	private void OnEnable()
 	{
-		if (shootAction != null) shootAction.performed += OnShootPerformed;
+		if (shootAction != null)
+		{
+			shootAction.performed += OnShootPerformed;
+			shootAction.Enable();
+		}
 	}
 
 	private void OnDisable()
 	{
-		if (shootAction != null) shootAction.performed -= OnShootPerformed;
+		if (shootAction != null)
+		{
+			shootAction.performed -= OnShootPerformed;
+			shootAction.Disable();
+		}
 	}
 
 	private void OnShootPerformed(InputAction.CallbackContext ctx)
