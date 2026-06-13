@@ -5,88 +5,87 @@ public class PlayerController : MonoBehaviour
 {
 	[Header("References")]
 	public Transform centerPoint;
-	public Transform cameraTransform; // Drag your Main Camera here!
+	public Transform cameraTransform;
+	public PlayerInput playerInput;
 
-	[Header("Ring Settings")]
-	public float radius = 5f;
-	public float moveSpeed = 180f; // Degrees per second
-	public float verticalSpeed = 5f;
+	[Header("Movement Settings")]
+	public float moveSpeed = 7f;
+	public float rotationSpeed = 15f;
 
-	[Header("Limits")]
-	public float minHeight = 0f;
-	public float maxHeight = 10f;
+	[Header("Camera Settings")]
+	public float cameraDistance = 8f;
+	public float cameraHeight = 3.5f;
 
-	private float angle;
-	private float height;
+	private InputAction moveAction;
 	private Vector2 moveInput;
+	private bool isFinalBoss = false;
 
 	void Start()
 	{
-		if (centerPoint == null)
-		{
-			Debug.LogError("Please assign a Center Point object!");
-			return;
-		}
+		if (playerInput == null)
+			playerInput = GetComponent<PlayerInput>();
 
-		// Initialize the camera reference automatically if forgotten
 		if (cameraTransform == null && Camera.main != null)
-		{
 			cameraTransform = Camera.main.transform;
+
+		if (playerInput != null && playerInput.actions != null)
+		{
+			moveAction = playerInput.actions.FindAction("Move");
 		}
-
-		// Calculate starting position based on where you placed the capsule in the editor
-		Vector3 offset = transform.position - centerPoint.position;
-		angle = Mathf.Atan2(offset.z, offset.x) * Mathf.Rad2Deg;
-		height = transform.position.y - centerPoint.position.y;
-	}
-
-	public void OnMove(InputAction.CallbackContext context)
-	{
-		moveInput = context.ReadValue<Vector2>();
 	}
 
 	void Update()
 	{
-		if (centerPoint == null || cameraTransform == null) return;
+		if (moveAction == null || cameraTransform == null || centerPoint == null) return;
 
-		// 1. CALCULATE CAMERA RELATIVE DIRECTION
-		// Get the direction from the camera to the center point on a flat horizontal plane
-		Vector3 camToCenter = centerPoint.position - cameraTransform.position;
-		camToCenter.y = 0;
-		camToCenter.Normalize();
+		// 1. Get Input
+		moveInput = moveAction.ReadValue<Vector2>();
 
-		// Calculate the camera's screen-right vector matching the ring's curve
-		Vector3 camRight = Vector3.Cross(Vector3.up, camToCenter).normalized;
+		// 2. Get camera directions (flattened)
+		Vector3 camForward = cameraTransform.forward;
+		Vector3 camRight = cameraTransform.right;
 
-		// 2. DETERMINE MOVEMENT SIGN
-		// Figure out if moving along the screen-right vector increases or decreases the circle angle
-		Vector3 playerPosOnPlane = new Vector3(transform.position.x, centerPoint.position.y, transform.position.z);
-		Vector3 tangent = Vector3.Cross(Vector3.up, playerPosOnPlane - centerPoint.position).normalized;
+		camForward.y = 0f;
+		camRight.y = 0f;
+		camForward.Normalize();
+		camRight.Normalize();
 
-		// This factor accurately adjusts the movement direction regardless of screen inversion
-		float directionFactor = Vector3.Dot(camRight, tangent) > 0 ? 1f : -1f;
+		Vector3 movementDirection = (camForward * moveInput.y) + (camRight * moveInput.x);
 
-		// 3. APPLY INPUT
-		float inputX = moveInput.x * directionFactor;
-		float inputY = moveInput.y;
+		//Move player
+		transform.position += movementDirection * moveSpeed * Time.deltaTime;
 
-		// Orbit around center
-		angle += inputX * moveSpeed * Time.deltaTime;
+		//Rotate player toward movement dir
+		if (movementDirection.sqrMagnitude > 0.001f)
+		{
+			Quaternion targetRotation = Quaternion.LookRotation(movementDirection);
+			transform.rotation = Quaternion.Slerp(
+				transform.rotation,
+				targetRotation,
+				rotationSpeed * Time.deltaTime
+			);
+		}
 
-		// Handle vertical movement
-		height += inputY * verticalSpeed * Time.deltaTime;
-		height = Mathf.Clamp(height, minHeight, maxHeight);
+		//Placeholderfor final boss cam behaviour
+		isFinalBoss = true;
+		if (isFinalBoss)
+		{
+			UpdateCameraPosition();
+		}
+	}
 
-		// Convert polar -> cartesian coordinates
-		float rad = angle * Mathf.Deg2Rad;
-		Vector3 newOffset = new Vector3(
-			Mathf.Cos(rad) * radius,
-			height,
-			Mathf.Sin(rad) * radius
-		);
+	void UpdateCameraPosition()
+	{
+		// Get line from center through player
+		Vector3 centerToPlayer = transform.position - centerPoint.position;
+		centerToPlayer.y = 0f; 
+		centerToPlayer.Normalize();
 
-		// Snap position and look at the center structure
-		transform.position = centerPoint.position + newOffset;
-		transform.LookAt(new Vector3(centerPoint.position.x, transform.position.y, centerPoint.position.z));
+		Vector3 targetCamPos = transform.position + (centerToPlayer * cameraDistance);
+		targetCamPos.y = transform.position.y + cameraHeight;
+		cameraTransform.position = targetCamPos;
+
+		Vector3 lookTarget = new Vector3(centerPoint.position.x, transform.position.y, centerPoint.position.z);
+		cameraTransform.LookAt(lookTarget);
 	}
 }
