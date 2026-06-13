@@ -31,6 +31,11 @@ public class PlayerController : MonoBehaviour
 	public float cameraDistance = 8f;
 	public float cameraHeight = 3.5f;
 
+	[Header("Shooting Settings")]
+	public GameObject projectilePrefab;
+	public Transform shootPoint; 
+	private InputAction shootAction;
+
 	private InputAction moveAction; 
 	private InputAction jumpAction;
 	private Vector2 moveInput;
@@ -55,7 +60,13 @@ public class PlayerController : MonoBehaviour
 		if (playerInput != null && playerInput.actions != null)
 		{
 			moveAction = playerInput.actions.FindAction("Move"); 
-			jumpAction = playerInput.actions.FindAction("Jump");
+			jumpAction = playerInput.actions.FindAction("Jump"); 
+			shootAction = playerInput.actions.FindAction("Shoot");
+			if (shootAction != null)
+			{
+				shootAction.Enable();
+				shootAction.performed += ctx => Shoot();
+			}
 		}
 
 		currentHealth = maxHealth;
@@ -187,5 +198,14 @@ public class PlayerController : MonoBehaviour
 	private void Die()
 	{
 		Debug.Log("Its okay to die");
+	}
+
+	// SHOOTING //
+	void Shoot()
+	{
+		if (projectilePrefab != null && shootPoint != null)
+		{
+			Instantiate(projectilePrefab, shootPoint.position, shootPoint.rotation);
+		}
 	}
 }
