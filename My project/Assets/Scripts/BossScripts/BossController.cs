@@ -3,7 +3,9 @@ using UnityEngine;
 public class BossController : MonoBehaviour
 {
 	public enum BossState { Normal, Hidden, Up }
+	public enum BossAttack { None, LaserSpin, NormalAttack2, UpAttack1, UpAttack2 }
 	public BossState currentState = BossState.Normal;
+	private BossAttack currentAttack = BossAttack.None;
 
 	[Header("Rotation Settings")]
     public float rotationSpeed = 20f; 
@@ -26,18 +28,40 @@ public class BossController : MonoBehaviour
 	public float moveTime = 0.15f;
 	public float maxMoveSpeed = 50f;
 
-	[Header("Transition Chances ")]
+	[Header("State Transition Chances ")]
 	[Range(0, 100)] public float normalToHidden = 50f;
 	[Range(0, 100)] public float normalToUp = 50f;
+
+	[Header("Up State Attacks")]
+	[Range(0, 100)] public float upAttack1Chance = 50f;
+	[Range(0, 100)] public float upAttack2Chance = 50f;
+
+	[Header("Normal State Attacks")]
+	[Range(0, 100)] public float laserAttackChance = 50f;
+	[Range(0, 100)] public float normalAttack2Chance = 50f;
+
+	[Header("Laser Attack")]
+	public float laserRotationSpeed = 120f;
+	public int minRotationCount = 1;
+	public int maxRotationCount = 3;
+	private float spinDirection = 1f;
+	public GameObject laserTriggerCollider;
 
 	[Header("References")]
 	public Transform playerTransform;
 
 	private bool isTurning = false;
-	private float targetHeight;
+	[SerializeField] private bool isAttacking = false;
+	[SerializeField] private bool stateTimeExpired = false;
+
 	private float yVelocity; 
 	private float stateTimer;
+	private float targetHeight;
 
+
+	private float laserSpinLeft = 0f;
+
+	// START //
 	void Start()
     {
         //Ensure we find player
@@ -50,23 +74,41 @@ public class BossController : MonoBehaviour
 			}
 		}
 
+		if (laserTriggerCollider != null)
+			laserTriggerCollider.SetActive(false);
+
 		EnterState(currentState);
 		targetHeight = transform.position.y;
 	}
 
-    void Update()
-    {
-	}
-
+	// FIXED UPDATE //
 	void FixedUpdate()
 	{
 		HandleStateTimer();
 		HandleMovement();
 		if (playerTransform == null) return;
 
-		HandleRotation();
+		if (isAttacking)
+		{
+			ExecuteAttack();
+		}
+		else
+		{
+			//If not attacking - Follow player / change state / chose attack
+			HandleRotation();
+
+			if (!stateTimeExpired)
+			{
+				PickAttack();
+			}
+			else
+			{
+				TransitionToState();
+			}
+		}
 	}
 
+	// ROTATION - PLAYER FOLLOW //
 	void HandleRotation() { 
         Vector3 targetDir = playerTransform.position - transform.position;
         targetDir.y = 0;
@@ -89,6 +131,43 @@ public class BossController : MonoBehaviour
 				Quaternion targetRot = Quaternion.LookRotation(targetDir);
 				transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, rotationSpeed * Time.deltaTime);
 			}
+		}
+	}
+
+	void HandleMovement()
+	{
+		Vector3 currentPos = transform.position;
+		currentPos.y = Mathf.SmoothDamp(
+			currentPos.y,
+			targetHeight,
+			ref yVelocity,
+			moveTime,
+			maxMoveSpeed,
+			Time.fixedDeltaTime
+		);
+		transform.position = currentPos;
+	}
+
+	// STATE MANAGEMENT //
+	void DecideOnState()
+	{
+		if (currentState == BossState.Normal)
+		{
+			float totalWeight = normalToHidden + normalToUp;
+			float roll = Random.Range(0f, totalWeight);
+
+			if (roll <= normalToHidden)
+			{
+				EnterState(BossState.Hidden);
+			}
+			else
+			{
+				EnterState(BossState.Up);
+			}
+		}
+		else
+		{
+			EnterState(BossState.Normal);
 		}
 	}
 
@@ -115,49 +194,142 @@ public class BossController : MonoBehaviour
 		}
 	}
 
-	void DecideOnState()
+	void TransitionToState()
 	{
-		if (currentState == BossState.Normal)
-		{
-			float totalWeight = normalToHidden + normalToUp;
-			float roll = Random.Range(0f, totalWeight);
-
-			if (roll <= normalToHidden)
-			{
-				EnterState(BossState.Hidden);
-			}
-			else
-			{
-				EnterState(BossState.Up);
-			}
-		}
-		else
-		{
-			EnterState(BossState.Normal);
-		}
+		stateTimeExpired = false;
+		DecideOnState();
 	}
 
 	void HandleStateTimer()
 	{
-		stateTimer -= Time.fixedDeltaTime;
-
-		if (stateTimer <= 0f)
+		if (stateTimer > 0f)
 		{
-			DecideOnState();
+			stateTimer -= Time.fixedDeltaTime;
+
+			if (stateTimer <= 0f)
+			{
+				stateTimeExpired = true;
+			}
 		}
 	}
 
-	void HandleMovement()
+
+	// ATTACK MANAGEMENT //
+	void PickAttack() {
+
+		//Hidden state has no attacks
+		if (currentState == BossState.Hidden) return;
+
+		isAttacking = true;
+		isTurning = false;
+		float totalWeight = 0f;
+		float roll = 0f;
+
+		// Roll for attack depending on state
+		switch (currentState)
+		{
+			case BossState.Normal:
+				totalWeight = laserAttackChance + normalAttack2Chance; 
+				roll = Random.Range(0f, totalWeight);
+				if (roll <= laserAttackChance)
+				{
+					TriggerLaserAttack();
+				}
+				else
+				{
+					TriggerNormalAttack2();
+				}
+				break;
+
+			case BossState.Up:
+				totalWeight = upAttack1Chance + upAttack2Chance;
+				roll = Random.Range(0f, totalWeight);
+				if (roll <= upAttack1Chance)
+				{
+					TriggerUpAttack1();
+				}
+				else
+				{
+					TriggerUpAttack2();
+				}
+				break;
+		}
+	}
+
+	public void OnAttackComplete()
 	{
-		Vector3 currentPos = transform.position;
-		currentPos.y = Mathf.SmoothDamp(
-			currentPos.y,
-			targetHeight,
-			ref yVelocity,
-			moveTime,
-			maxMoveSpeed,
-			Time.fixedDeltaTime
-		);
-		transform.position = currentPos;
+		currentAttack = BossAttack.None; 
+		isAttacking = false;
+	}
+
+	// ATTACKS //
+	void TriggerLaserAttack()
+	{
+		currentAttack = BossAttack.LaserSpin; 
+
+		int rotations = Random.Range(minRotationCount, maxRotationCount + 1);
+		laserSpinLeft = rotations * 360f;
+		spinDirection = (Random.value > 0.5f) ? 1f : -1f;
+
+		if (laserTriggerCollider != null)
+			laserTriggerCollider.SetActive(true);
+	}
+
+	void TriggerNormalAttack2()
+	{
+		currentAttack = BossAttack.NormalAttack2;
+		OnAttackComplete();
+	}
+
+	void TriggerUpAttack1()
+	{
+		currentAttack = BossAttack.UpAttack1;
+		OnAttackComplete();
+	}
+
+	void TriggerUpAttack2()
+	{
+		currentAttack = BossAttack.UpAttack2;
+		OnAttackComplete();
+	}
+
+	// ATTACKS EXECUTION //
+	void ExecuteAttack() 
+	{
+		switch (currentAttack)
+		{
+			case BossAttack.LaserSpin:
+				if (laserSpinLeft > 0f)
+				{
+					float step = laserRotationSpeed * Time.fixedDeltaTime;
+					transform.Rotate(0f, step * spinDirection, 0f);
+					laserSpinLeft -= step;
+
+					if (laserSpinLeft <= 0f)
+					{
+						if (laserTriggerCollider != null)
+							laserTriggerCollider.SetActive(false);
+
+						OnAttackComplete();
+					}
+				}
+				break;
+
+			case BossAttack.NormalAttack2:
+				// Frame calcs for NormalAttack2 here
+				break;
+
+			case BossAttack.UpAttack1:
+				// Frame calcs for UpAttack1 here
+				break;
+
+			case BossAttack.UpAttack2:
+				// Frame calcs for UpAttack2 here
+				break;
+
+			case BossAttack.None:
+			default:
+				break;
+		}
 	}
 }
