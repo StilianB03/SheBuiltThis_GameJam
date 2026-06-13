@@ -257,7 +257,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1378589476468592314, guid: 3e0636e8355afc547b4188b0566cee52, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.62
+      value: 3.33
       objectReference: {fileID: 0}
     - target: {fileID: 1378589476468592314, guid: 3e0636e8355afc547b4188b0566cee52, type: 3}
       propertyPath: m_LocalPosition.z
@@ -294,6 +294,74 @@ PrefabInstance:
     - target: {fileID: 1759336800845878272, guid: 3e0636e8355afc547b4188b0566cee52, type: 3}
       propertyPath: m_Name
       value: Boss
+      objectReference: {fileID: 0}
+    - target: {fileID: 2193488609235976672, guid: 3e0636e8355afc547b4188b0566cee52, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 6.49
+      objectReference: {fileID: 0}
+    - target: {fileID: 2193488609235976672, guid: 3e0636e8355afc547b4188b0566cee52, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2193488609235976672, guid: 3e0636e8355afc547b4188b0566cee52, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2193488609235976672, guid: 3e0636e8355afc547b4188b0566cee52, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.50008726
+      objectReference: {fileID: 0}
+    - target: {fileID: 2193488609235976672, guid: 3e0636e8355afc547b4188b0566cee52, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0.49991274
+      objectReference: {fileID: 0}
+    - target: {fileID: 2193488609235976672, guid: 3e0636e8355afc547b4188b0566cee52, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.50008726
+      objectReference: {fileID: 0}
+    - target: {fileID: 2193488609235976672, guid: 3e0636e8355afc547b4188b0566cee52, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0.49991274
+      objectReference: {fileID: 0}
+    - target: {fileID: 2193488609235976672, guid: 3e0636e8355afc547b4188b0566cee52, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 89.98
+      objectReference: {fileID: 0}
+    - target: {fileID: 2193488609235976672, guid: 3e0636e8355afc547b4188b0566cee52, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 90
+      objectReference: {fileID: 0}
+    - target: {fileID: 2299745425739237652, guid: 3e0636e8355afc547b4188b0566cee52, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 2299745425739237652, guid: 3e0636e8355afc547b4188b0566cee52, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 2299745425739237652, guid: 3e0636e8355afc547b4188b0566cee52, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2299745425739237652, guid: 3e0636e8355afc547b4188b0566cee52, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 90
+      objectReference: {fileID: 0}
+    - target: {fileID: 8783782209144638521, guid: 3e0636e8355afc547b4188b0566cee52, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 8783782209144638521, guid: 3e0636e8355afc547b4188b0566cee52, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 8783782209144638521, guid: 3e0636e8355afc547b4188b0566cee52, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8783782209144638521, guid: 3e0636e8355afc547b4188b0566cee52, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 90
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -445,8 +513,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5f6457ccb73156d4f853feb9823ebebd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossController
-  rotationSpeed: 3
-  followPlayerOffsetAngle: 30
+  rotationSpeed: 2
+  followPlayerOffsetAngle: 15
+  minY: 1
+  maxY: 6
+  minWaitTime: 2
+  maxWaitTime: 6
+  moveTime: 1
+  maxMoveSpeed: 25
+  hidingThreshold: 1
+  hidingHeight: -5
   playerTransform: {fileID: 1779131348}
 --- !u!1 &1779131344
 GameObject:
@@ -535,13 +611,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1779131344}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -6.73, y: 0.72, z: -0.09}
+  m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
+  m_LocalPosition: {x: -1.48, y: 0.72, z: 5.6}
   m_LocalScale: {x: 0.1933008, y: 0.1933008, z: 0.1933008}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!114 &1779131349
 MonoBehaviour:
   m_ObjectHideFlags: 0
