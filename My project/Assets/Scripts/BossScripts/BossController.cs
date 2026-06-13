@@ -15,16 +15,20 @@ public class BossController : MonoBehaviour
 	public float upHeight = 4.8f;
 
 	[Header("State Durations")]
-	public float minNormalTime = 3f;
-	public float maxNormalTime = 6f;
+	public float minNormalTime = 6f;
+	public float maxNormalTime = 12f;
 	public float minHiddenTime = 2f;
-	public float maxHiddenTime = 4f;
+	public float maxHiddenTime = 7f;
 	public float minUpTime = 2f;
-	public float maxUpTime = 5f;
+	public float maxUpTime = 7f;
 
 	[Header("Vertical Movement")]
 	public float moveTime = 0.15f;
 	public float maxMoveSpeed = 50f;
+
+	[Header("Transition Chances ")]
+	[Range(0, 100)] public float normalToHidden = 50f;
+	[Range(0, 100)] public float normalToUp = 50f;
 
 	[Header("References")]
 	public Transform playerTransform;
@@ -32,8 +36,8 @@ public class BossController : MonoBehaviour
 	private bool isTurning = false;
 	private bool isHiding = false; 
 	private float targetHeight;
-	private float yVelocity;
-	private float movementTimer;
+	private float yVelocity; 
+	private float stateTimer;
 
 	void Start()
     {
@@ -49,7 +53,6 @@ public class BossController : MonoBehaviour
 
 		EnterState(currentState);
 		targetHeight = transform.position.y;
-		ScheduleRandomMove();
 	}
 
     void Update()
@@ -58,6 +61,7 @@ public class BossController : MonoBehaviour
 
 	void FixedUpdate()
 	{
+		HandleStateTimer();
 		HandleMovement();
 		if (playerTransform == null) return;
 
@@ -89,11 +93,6 @@ public class BossController : MonoBehaviour
 		}
 	}
 
-	void ScheduleRandomMove()
-	{
-		movementTimer = Random.Range(minWaitTime, maxWaitTime);
-	}
-
 	void EnterState(BossState newState)
 	{
 		currentState = newState;
@@ -114,6 +113,38 @@ public class BossController : MonoBehaviour
 				targetHeight = upHeight;
 				stateTimer = Random.Range(minUpTime, maxUpTime);
 				break;
+		}
+	}
+
+	void DecideOnState()
+	{
+		if (currentState == BossState.Normal)
+		{
+			float totalWeight = normalToHidden + normalToUp;
+			float roll = Random.Range(0f, totalWeight);
+
+			if (roll <= normalToHidden)
+			{
+				EnterState(BossState.Hidden);
+			}
+			else
+			{
+				EnterState(BossState.Up);
+			}
+		}
+		else
+		{
+			EnterState(BossState.Normal);
+		}
+	}
+
+	void HandleStateTimer()
+	{
+		stateTimer -= Time.fixedDeltaTime;
+
+		if (stateTimer <= 0f)
+		{
+			DecideOnState();
 		}
 	}
 
