@@ -201,15 +201,8 @@ public class PlayerController : MonoBehaviour
 	// SHOOTING //
 	void Shoot()
 	{
-		Debug.Log("Shoot() called");
-
-		Debug.Log($"projectileData = {projectileData}");
-		Debug.Log($"shootPoint = {shootPoint}");
-		Debug.Log($"Prefab = {projectileData.projectilePrefab}");
 		if (projectileData?.projectilePrefab != null && shootPoint != null)
 		{
-			Debug.Log("Creating projectile");
-
 			GameObject bulletObj = Instantiate(
 				projectileData.projectilePrefab,
 				shootPoint.position,
@@ -219,12 +212,7 @@ public class PlayerController : MonoBehaviour
 
 			if (projectileScript != null)
 			{
-				Debug.Log("Projectile script found");
 				projectileScript.Initialize(projectileData.speed);
-			}
-			else
-			{
-				Debug.Log("Projectile script MISSING");
 			}
 		}
 	}
