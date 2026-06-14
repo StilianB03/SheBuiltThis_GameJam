@@ -10,7 +10,8 @@ public class SoundManager : MonoBehaviour
 	public class SoundEntry
 	{
 		public string name;
-		public AudioClip clip;
+		public AudioClip clip; 
+		[Range(0f, 1f)] public float volume = 1.0f;
 	}
 
 	[Header("Boss Sounds")]
@@ -28,31 +29,36 @@ public class SoundManager : MonoBehaviour
 		audioSource = GetComponent<AudioSource>();
 	}
 
-	private AudioClip GetClip(string name)
+	private SoundEntry GetEntry(string name)
 	{
 		SoundEntry entry = effects.Find(s => s.name == name) ??
 						   environment.Find(s => s.name == name);
 
-		if (entry != null)
-		{
-			return entry?.clip;
-		}
+		if (entry == null)
+			Debug.LogWarning("SoundManager: Clip not found - " + name);
+
+		return entry;
 	}
 
 	public void PlayOnce(string name)
 	{
-		AudioClip clip = GetClip(name);
-		if (clip) audioSource.PlayOneShot(clip);
+		SoundEntry entry = GetEntry(name);
+		if (entry != null && entry.clip != null) 
+			audioSource.PlayOneShot(entry.clip, entry.volume);
 	}
 
 	public void PlayLooping(string name)
 	{
-		AudioClip clip = GetClip(name);
-		if (clip && (audioSource.clip != clip || !audioSource.isPlaying))
+		SoundEntry entry = GetEntry(name);
+		if (entry != null && entry.clip != null)
 		{
-			audioSource.clip = clip;
-			audioSource.loop = true;
-			audioSource.Play();
+			if (audioSource.clip != entry.clip || !audioSource.isPlaying)
+			{
+				audioSource.clip = entry.clip;
+				audioSource.volume = entry.volume;
+				audioSource.loop = true;
+				audioSource.Play();
+			}
 		}
 	}
 
