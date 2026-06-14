@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.InputSystem;
 using System;
+using System.Collections;
 
 public class PlayerController : MonoBehaviour
 {
@@ -23,6 +24,10 @@ public class PlayerController : MonoBehaviour
 	private bool isGrounded;
 	public LayerMask groundLayer;
 
+	[Header("Run Settings")]
+	public float runMultiplier = 1.8f;
+	private bool isRunning = false;
+
 	[Header("Health Settings")]
 	public float maxHealth = 100f;
 	private float currentHealth = 100f;
@@ -33,7 +38,7 @@ public class PlayerController : MonoBehaviour
 
 	[Header("Shooting Settings")]
 	public ProjectileData projectileData;
-	public Transform shootPoint; 
+	public Transform shootPoint;
 	public float fireRate = 0.75f;
 	private float lastFireTime;
 	private bool isShootingHeld = false;
@@ -41,6 +46,8 @@ public class PlayerController : MonoBehaviour
 
 	private InputAction moveAction;
 	private InputAction jumpAction;
+	private InputAction runAction;
+
 	private Vector2 moveInput;
 	public bool isFinalBoss = false;
 
@@ -53,7 +60,8 @@ public class PlayerController : MonoBehaviour
 
 		moveAction = playerInput.actions.FindAction("Move");
 		jumpAction = playerInput.actions.FindAction("Jump");
-		shootAction = playerInput.actions.FindAction("Shoot");
+		shootAction = playerInput.actions.FindAction("Shoot"); 
+		runAction = playerInput.actions.FindAction("Run");
 	}
 
 	void Start()
@@ -93,6 +101,11 @@ public class PlayerController : MonoBehaviour
 		else
 		{
 			lastFireTime = 0f;
+		}
+
+		if (runAction != null)
+		{
+			isRunning = runAction.IsPressed();
 		}
 
 		HandleJump();
@@ -161,7 +174,14 @@ public class PlayerController : MonoBehaviour
 		Vector3 movementDirection = (camForwardHorizontal * moveInput.y) + (camRightHorizontal * moveInput.x);
 		if (movementDirection.magnitude > 1f) movementDirection.Normalize();
 
-		float currentSpeed = isGrounded ? moveSpeed : (moveSpeed * airControlFactor);
+		float speed = moveSpeed;
+
+		if (isRunning && isGrounded)
+		{
+			speed *= runMultiplier;
+		}
+
+		float currentSpeed = isGrounded ? speed : (speed * airControlFactor);
 		Vector3 targetVelocity = movementDirection * currentSpeed;
 
 		if (!isGrounded && movementDirection.sqrMagnitude < 0.001f)
@@ -251,6 +271,7 @@ public class PlayerController : MonoBehaviour
 			shootAction.canceled += ctx => isShootingHeld = false;
 			shootAction.Enable();
 		}
+		if (runAction != null) runAction.Enable();
 	}
 
 	private void OnDisable()
@@ -261,6 +282,7 @@ public class PlayerController : MonoBehaviour
 			shootAction.canceled -= ctx => isShootingHeld = false;
 			shootAction.Disable();
 		}
+		if (runAction != null) runAction.Disable();
 	}
 
 	public void SetAscensionMode(bool isAscending)
@@ -268,20 +290,15 @@ public class PlayerController : MonoBehaviour
 		if (rb == null) return;
 		if (isAscending)
 		{
-			// 1. Set to non-kinematic first so we are allowed to modify velocity
 			rb.isKinematic = false;
 
-			// 2. Now we can safely zero out the physics forces
 			rb.linearVelocity = Vector3.zero;
 			rb.angularVelocity = Vector3.zero;
 
-			// 3. Finally, lock it into kinematic mode
 			rb.isKinematic = true;
 		}
 		else
 		{
-			// When turning off, reverse the order: 
-			// Kinematic off first, then resume physics
 			rb.isKinematic = false;
 		}
 	}

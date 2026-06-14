@@ -928,6 +928,10 @@ MonoBehaviour:
       m_Calls: []
     m_ActionId: 4ce5e04f-5fc7-4eb2-9a82-96a6fbceb7f7
     m_ActionName: 'Player/Shoot[/Keyboard/k]'
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: afab0560-679f-48e7-b3e8-885d93567add
+    m_ActionName: 'Player/Dash[/Keyboard/c]'
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: Keyboard&Mouse
   m_DefaultActionMap: Player
@@ -958,6 +962,7 @@ MonoBehaviour:
   groundLayer:
     serializedVersion: 2
     m_Bits: 4294967295
+  runMultiplier: 1.8
   maxHealth: 100
   cameraDistance: 6.5
   cameraHeight: 6
