@@ -1,0 +1,140 @@
+using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
+
+public class StarManager : MonoBehaviour
+{
+	public int totalStarsToCollect = 5; 
+	public Transform player;            
+	public float absorptionSpeed = 15f;
+
+	//Boss spawn vars//
+	public GameObject bossPrefab; 
+	public float bossSpawnY = 1.55f;
+
+	//Emission//
+	public float baseEmissionIntensity = 1.0f;
+	private float currentIntensity = 1.0f;
+	private float intensityIncrement = 16.0f;
+
+	public Renderer playerRenderer; 
+	private Material playerMaterial;
+	private Queue<StarCompanion> starQueue = new Queue<StarCompanion>();
+
+	private bool sequenceStarted = false;
+
+	void Start()
+	{
+		if (playerRenderer != null)
+		{
+			playerMaterial = playerRenderer.material;
+		}
+	}
+
+	public void RegisterCollectedStar(StarCompanion star)
+	{
+		if (!starQueue.Contains(star))
+		{
+			starQueue.Enqueue(star);
+		}
+
+		if (!sequenceStarted && starQueue.Count >= totalStarsToCollect)
+		{
+			sequenceStarted = true;
+			StartCoroutine(AbsorbStarsOneByOne());
+		}
+	}
+
+	private IEnumerator AbsorbStarsOneByOne()
+	{
+		while (starQueue.Count > 0)
+		{
+			StarCompanion star = starQueue.Dequeue();
+			if (star == null) continue;
+
+			StartCoroutine(AbsorbSingleStar(star)); 
+			yield return new WaitForSeconds(0.2f);
+		}
+
+		// Spawn Boss
+		yield return new WaitForSeconds(1.0f);
+		if (bossPrefab != null)
+		{
+			Vector3 spawnPos = new Vector3(0, bossSpawnY - 7.55f, 0); 
+			Instantiate(bossPrefab, spawnPos, Quaternion.identity);
+		}
+	}
+
+	private IEnumerator AbsorbSingleStar(StarCompanion star) 
+	{
+		float orbitRadius = 4.5f;
+		float orbitSpeed = 7.5f;
+		float orbitDuration = 1.0f;
+
+		//Orbit
+		float elapsed = 0f;
+		while (elapsed < orbitDuration)
+		{
+			float angle = elapsed * orbitSpeed;
+			Vector3 offset = new Vector3(Mathf.Sin(angle), 0.5f, Mathf.Cos(angle)) * orbitRadius;
+			Vector3 targetOrbitPos = player.position + offset;
+
+			star.transform.position = Vector3.Lerp(star.transform.position, targetOrbitPos, 5f * Time.deltaTime);
+			elapsed += Time.deltaTime;
+			yield return null;
+		}
+
+		//Merge
+		float currentAbsorptionSpeed = absorptionSpeed * 1.5f;
+		while (Vector3.Distance(star.transform.position, player.position) > 0.1f)
+		{
+			star.transform.position = Vector3.MoveTowards(
+				star.transform.position,
+				player.position,
+				currentAbsorptionSpeed * Time.deltaTime
+			);
+			yield return null;
+		}
+
+		//Emission
+		currentIntensity += intensityIncrement;
+		ApplyEmission(currentIntensity);
+		Destroy(star.gameObject);
+
+		yield return new WaitForSeconds(0.3f);
+		yield return StartCoroutine(FadeToBaseIntensity(1.0f));
+	}
+
+	private IEnumerator FadeToBaseIntensity(float targetIntensity)
+	{
+		float fadeDuration = 0.5f;
+		float elapsed = 0f;
+		float startIntensity = currentIntensity;
+
+		while (elapsed < fadeDuration)
+		{
+			elapsed += Time.deltaTime;
+			float t = elapsed / fadeDuration;
+
+			// Lerp intensity
+			currentIntensity = Mathf.Lerp(startIntensity, targetIntensity, t);
+			ApplyEmission(currentIntensity);
+
+			yield return null;
+		}
+
+		currentIntensity = targetIntensity; 
+		ApplyEmission(currentIntensity);
+	}
+	
+	private void ApplyEmission(float intensity)
+	{
+		if (playerMaterial != null)
+		{
+			Color finalColor = Color.yellow * intensity;
+			playerMaterial.SetColor("_EmissionColor", finalColor);
+
+			DynamicGI.SetEmissive(playerRenderer, finalColor);
+		}
+	}
+}

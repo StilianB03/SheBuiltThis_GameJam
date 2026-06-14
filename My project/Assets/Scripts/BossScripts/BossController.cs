@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEngine.VFX;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 
 public class BossController : MonoBehaviour
 {
@@ -68,7 +70,7 @@ public class BossController : MonoBehaviour
 	private float yVelocity; 
 	private float stateTimer;
 	private float targetHeight;
-
+	private bool isSpawning = true;
 
 	private float laserSpinLeft = 0f;
 	public static event Action<float, float> OnHealthChanged;
@@ -97,11 +99,14 @@ public class BossController : MonoBehaviour
 
 		EnterState(currentState);
 		targetHeight = transform.position.y;
+		StartCoroutine(EntranceAnimation(targetHeight));
 	}
 
 	// FIXED UPDATE //
 	void FixedUpdate()
 	{
+		if (isSpawning) return;
+
 		HandleStateTimer();
 		HandleMovement();
 		if (playerTransform == null) return;
@@ -373,5 +378,31 @@ public class BossController : MonoBehaviour
 	private void Die()
 	{
 		Debug.Log("Boss dead??");
+	}
+
+	//ENTRANCE ANIM//
+	private IEnumerator EntranceAnimation(float finalTargetHeight)
+	{
+		isSpawning = true;
+
+		float duration = 3.0f;
+		float elapsed = 0f;
+
+		Vector3 startPos = new Vector3(transform.position.x, finalTargetHeight + 10f, transform.position.z);
+		Vector3 endPos = new Vector3(transform.position.x, finalTargetHeight, transform.position.z);
+
+		transform.position = startPos;
+
+		while (elapsed < duration)
+		{
+			elapsed += Time.deltaTime;
+			float t = elapsed / duration;
+
+			transform.position = Vector3.Lerp(startPos, endPos, t);
+			yield return null;
+		}
+
+		transform.position = endPos;
+		isSpawning = false;
 	}
 }

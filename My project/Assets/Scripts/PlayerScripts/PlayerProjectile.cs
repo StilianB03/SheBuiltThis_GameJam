@@ -36,7 +36,6 @@ public class Projectile : MonoBehaviour
 			if (other == boss.hitbox1 || other == boss.hitbox2)
 			{
 				boss.TakeDamage(bulletDmg);
-				Debug.Log("Boss HIT!");
 				Destroy(gameObject);
 			}
 		}

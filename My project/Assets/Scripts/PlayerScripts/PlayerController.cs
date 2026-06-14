@@ -39,7 +39,7 @@ public class PlayerController : MonoBehaviour
 	private InputAction moveAction;
 	private InputAction jumpAction;
 	private Vector2 moveInput;
-	private bool isFinalBoss = false;
+	public bool isFinalBoss = false;
 
 	public static event Action<float, float> OnHealthChanged;
 
