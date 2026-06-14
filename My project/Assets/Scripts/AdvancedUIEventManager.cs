@@ -55,11 +55,13 @@ public class AdvancedUIEventManager : MonoBehaviour
     private bool sequenceTriggered = false;
     private bool visualsCompleted = false;
     private bool isSwappingScenes = false;
+
     private float targetMaxVolume = 1f;
+    private bool isFadingIn = false; // Tracks if the introduction fade is currently processing
 
     void Awake()
     {
-        // 1. Set up the Black Overlay (Identical to text logic)
+        // 1. Set up the Black Overlay
         if (blackOverlayObject != null)
         {
             blackOverlayCanvasGroup = blackOverlayObject.GetComponent<CanvasGroup>();
@@ -114,8 +116,20 @@ public class AdvancedUIEventManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Call this from BossController.cs to trigger the whole sequence.
+    /// Call this from an Options Menu UI Slider (values 0 to 1) to dynamically adjust game music.
     /// </summary>
+    public void AdjustMusicVolume(float newVolume)
+    {
+        targetMaxVolume = Mathf.Clamp01(newVolume);
+
+        // Only change the AudioSource volume instantly if we aren't in the middle of an intro fade 
+        // or an ending sequence fade-out.
+        if (bgmSource != null && !isFadingIn && !sequenceTriggered)
+        {
+            bgmSource.volume = targetMaxVolume;
+        }
+    }
+
     public void TriggerEndingSequence()
     {
         if (sequenceTriggered) return;
@@ -131,17 +145,17 @@ public class AdvancedUIEventManager : MonoBehaviour
 
     private IEnumerator ExecuteSequence()
     {
-        // Kick off the BGM fade-out asynchronously so it dissolves perfectly alongside the UI
-        if (bgmSource != null)
-        {
-            StartCoroutine(FadeOutMusic());
-        }
-
         // STEP 0: Fade out existing gameplay UI elements first
         if (gameplayUICanvasGroup != null)
         {
             gameplayUICanvasGroup.blocksRaycasts = false;
             yield return StartCoroutine(FadeCanvasGroup(gameplayUICanvasGroup, 1f, 0f, gameplayFadeOutDuration));
+        }
+
+        // STEP 0.5: Wait for the music to fade out completely before drawing the black screen
+        if (bgmSource != null)
+        {
+            yield return StartCoroutine(FadeOutMusic());
         }
 
         // STEP 1 & 2: Fade in Black Screen and Text
@@ -233,14 +247,17 @@ public class AdvancedUIEventManager : MonoBehaviour
 
     private IEnumerator FadeInMusic()
     {
+        isFadingIn = true;
         float counter = 0f;
         while (counter < musicFadeInDuration)
         {
             counter += Time.deltaTime;
+            // Adapts gracefully even if targetMaxVolume is modified during the fade
             bgmSource.volume = Mathf.Lerp(0f, targetMaxVolume, counter / musicFadeInDuration);
             yield return null;
         }
         bgmSource.volume = targetMaxVolume;
+        isFadingIn = false;
     }
 
     private IEnumerator FadeOutMusic()

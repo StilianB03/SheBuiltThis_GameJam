@@ -188,7 +188,7 @@ public class StarManager : MonoBehaviour
 			{
 				star.gameObject.SetActive(true); 
 				star.transform.position = player.position; 
-				star.SetAppearance(Color.yellow, 0.5f, 0.2f);
+				star.SetAppearance(Color.yellow, 1f, 0.2f);
 			}
 		}
 		isOrbiting = true;
