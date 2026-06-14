@@ -4,9 +4,10 @@ using System.Collections.Generic;
 
 public class StarManager : MonoBehaviour
 {
-	public int totalStarsToCollect = 5;
 	public Transform player;
-	public float absorptionSpeed = 15f;
+	public float absorptionSpeed = 25f;
+	public int totalStarsToCollect = 10;
+	public Rigidbody playerRb;
 
 	//Boss spawn vars//
 	public GameObject bossPrefab;
@@ -20,7 +21,8 @@ public class StarManager : MonoBehaviour
 	public Renderer playerRenderer;
 	private Material playerMaterial;
 	private Queue<StarCompanion> starQueue = new Queue<StarCompanion>();
-	public List<StarCompanion> collectedStars = new List<StarCompanion>();
+	public List<StarCompanion> collectedStars = new List<StarCompanion>(); 
+	public List<StarCompanion> allCollectedStars = new List<StarCompanion>();
 
 	private bool sequenceStarted = false;
 	private bool isOrbiting = false;
@@ -59,37 +61,31 @@ public class StarManager : MonoBehaviour
 		{
 			starQueue.Enqueue(star);
 		}
-
-		if (!sequenceStarted && starQueue.Count >= totalStarsToCollect)
-		{
-			sequenceStarted = true;
-			StartCoroutine(AbsorbStarsOneByOne());
-		}
 	}
 
-	private IEnumerator AbsorbStarsOneByOne()
-	{
-		while (starQueue.Count > 0)
-		{
-			StarCompanion star = starQueue.Dequeue();
-			if (star == null) continue;
+	//private IEnumerator AbsorbStarsOneByOne()
+	//{
+	//	while (starQueue.Count > 0)
+	//	{
+	//		StarCompanion star = starQueue.Dequeue();
+	//		if (star == null) continue;
 
-			StartCoroutine(AbsorbSingleStar(star));
-			yield return new WaitForSeconds(0.2f);
-		}
+	//		StartCoroutine(AbsorbSingleStar(star));
+	//		yield return new WaitForSeconds(0.2f);
+	//	}
 
-		// Spawn Boss
+	//	// Spawn Boss
 
-		yield return new WaitUntil(() =>
-		myEM != null && myEM.arenaEntered); 
+	//	yield return new WaitUntil(() =>
+	//	myEM != null && myEM.arenaEntered); 
 
-		if (bossPrefab != null)
-		{
-			myEM.TriggeredArenaEntered();
-			Vector3 spawnPos = new Vector3(0, bossSpawnY - 7.55f, 0);
-			Instantiate(bossPrefab, spawnPos, Quaternion.identity);
-		}
-	}
+	//	if (bossPrefab != null)
+	//	{
+	//		myEM.TriggeredArenaEntered();
+	//		Vector3 spawnPos = new Vector3(0, bossSpawnY - 7.55f, 0);
+	//		Instantiate(bossPrefab, spawnPos, Quaternion.identity);
+	//	}
+	//}
 
 	private IEnumerator AbsorbSingleStar(StarCompanion star)
 	{
@@ -186,18 +182,96 @@ public class StarManager : MonoBehaviour
 	{
 		if (player == null) yield break;
 
-		foreach (var star in collectedStars)
+		foreach (var star in allCollectedStars)
 		{
-			if (star != null) star.gameObject.SetActive(true);
+			if (star != null)
+			{
+				star.gameObject.SetActive(true); 
+				star.transform.position = player.position; 
+				star.SetAppearance(Color.yellow, 5.0f, 0.2f);
+			}
 		}
 		isOrbiting = true;
 
-		yield return new WaitForSeconds(2.0f);
+		yield return new WaitForSeconds(4.0f);
 
 		BossController bossScript = FindObjectOfType<BossController>();
 		if (bossScript != null)
 		{
 			bossScript.shouldAscend = true;
+		}
+	}
+
+	public void TriggerWaveAbsorption(List<StarCompanion> waveStars)
+	{
+		StartCoroutine(AbsorbWave(waveStars));
+	}
+
+	private IEnumerator AbsorbWave(List<StarCompanion> stars)
+	{
+		// 1. Lock Player Movement
+    if (playerRb != null) playerRb.isKinematic = true;
+
+    // 2. Filter: Only process stars that haven't been absorbed yet
+    List<StarCompanion> newStars = new List<StarCompanion>();
+    foreach (var star in stars)
+    {
+        if (star != null && !star.isAbsorbed)
+        {
+            newStars.Add(star);
+        }
+    }
+
+    // 3. Cinematic Rise & Dim for the NEW set only
+    float duration = 1.5f;
+    float elapsed = 0f;
+    while (elapsed < duration)
+    {
+        elapsed += Time.deltaTime;
+        float t = elapsed / duration;
+        
+        foreach (var star in newStars)
+        {
+            // Move up
+            star.transform.position += Vector3.up * Time.deltaTime * 0.5f;
+            // Dim emission (Assuming you added SetEmissionIntensity to StarCompanion)
+            star.SetEmissionIntensity(Mathf.Lerp(1.0f, 0.1f, t));
+        }
+        yield return null;
+    }
+
+    // 4. Merge NEW stars
+    foreach (var star in newStars)
+    {
+        if (!allCollectedStars.Contains(star))
+            allCollectedStars.Add(star);
+
+        yield return StartCoroutine(AbsorbSingleStar(star));
+        star.isAbsorbed = true; // Mark as done
+    }
+
+    // 5. Unlock Player Movement
+    if (playerRb != null) playerRb.isKinematic = false;
+
+    // Final check for boss spawn
+    if (allCollectedStars.Count >= totalStarsToCollect)
+    {
+        StartCoroutine(SpawnBossSequence());
+    }
+	}
+
+	private IEnumerator SpawnBossSequence()
+	{
+		yield return new WaitUntil(() => myEM != null && myEM.arenaEntered);
+
+		if (bossPrefab != null)
+		{
+			if (FindObjectOfType<BossController>() == null)
+			{
+				myEM.TriggeredArenaEntered();
+				Vector3 spawnPos = new Vector3(0, bossSpawnY - 7.55f, 0);
+				Instantiate(bossPrefab, spawnPos, Quaternion.identity);
+			}
 		}
 	}
 }

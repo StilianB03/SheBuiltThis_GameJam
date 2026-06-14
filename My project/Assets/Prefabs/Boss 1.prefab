@@ -437,6 +437,11 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 2334413437170192332}
   m_SourcePrefab: {fileID: 100100000, guid: 3e800b7ff4ef80143997d3a6fad4e97c, type: 3}
+--- !u!23 &7298640881486716022 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -7511558181221131132, guid: 3e800b7ff4ef80143997d3a6fad4e97c, type: 3}
+  m_PrefabInstance: {fileID: 8252967915977588978}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &8431538854832842521 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 3e800b7ff4ef80143997d3a6fad4e97c, type: 3}
@@ -501,6 +506,7 @@ MonoBehaviour:
   stateTimeExpired: 0
   shouldAscend: 0
   isAscending: 0
+  bossRenderer: {fileID: 7298640881486716022}
 --- !u!136 &7627329237042145001
 CapsuleCollider:
   m_ObjectHideFlags: 0

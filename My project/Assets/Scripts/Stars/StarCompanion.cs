@@ -12,7 +12,8 @@ public class StarCompanion : MonoBehaviour
 
 	[Header("Hover Settings")]
 	public float hoverSpeed = 5f;   
-	public float hoverHeight = 0.5f;
+	public float hoverHeight = 0.5f; 
+	public bool isAbsorbed = false;
 
 	private bool isCollected = false; 
 	private bool isRegistered = false;
@@ -70,7 +71,6 @@ public class StarCompanion : MonoBehaviour
 			StarManager manager = FindAnyObjectByType<StarManager>();
 			if (manager != null)
 			{
-				manager.RegisterCollectedStar(this);
 				isRegistered = true; // Prevents calling this every frame
 			}
 		}
@@ -87,5 +87,27 @@ public class StarCompanion : MonoBehaviour
 	{
 		mySM.PlayOnce("starMeeting"); 
 		yield break;
+	}
+
+	public void SetEmissionIntensity(float intensity)
+	{
+		Renderer rend = GetComponent<Renderer>();
+		if (rend != null)
+		{
+			rend.material.SetColor("_emissive_color", Color.yellow * intensity);
+		}
+	}
+
+	public void SetAppearance(Color color, float emissionIntensity, float alpha)
+	{
+		Renderer rend = GetComponent<Renderer>();
+		if (rend != null)
+		{
+			rend.material.SetColor("_emissive_color", color * emissionIntensity);
+
+			Color baseColor = rend.material.GetColor("_Base_Color_1");
+			baseColor.a = alpha;
+			rend.material.SetColor("_Base_Color_1", baseColor);
+		}
 	}
 }

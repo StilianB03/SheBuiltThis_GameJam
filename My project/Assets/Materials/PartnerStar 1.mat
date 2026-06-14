@@ -102,6 +102,7 @@ Material:
     - _AlphaToMask: 0
     - _Blend: 0
     - _BlendModePreserveSpecular: 1
+    - _BlinkFactor: 0
     - _BumpScale: 1
     - _CastShadows: 1
     - _ClearCoatMask: 0
@@ -133,9 +134,9 @@ Material:
     - _ZTest: 4
     - _ZWrite: 1
     - _ZWriteControl: 1
-    - _emissive: 2.09
+    - _emissive: 8.92
     - _power: 0.94
-    - _transparency: -0.14
+    - _transparency: 0.72
     m_Colors:
     - _BaseColor: {r: 0.8980392, g: 0.26196107, b: 0, a: 1}
     - _Base_Color_1: {r: 0.90588236, g: 0.5268275, b: 0.117647044, a: 1}

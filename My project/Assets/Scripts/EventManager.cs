@@ -5,7 +5,9 @@ using System.Collections;
 
 public class EventManager : MonoBehaviour
 {
-	public bool arenaEntered = false;
+	public bool arenaEntered = false; 
+	public GameObject bossHealthBar; 
+	public GameObject playerHealthBar;
 
 	public void TriggeredArenaEntered()
 	{
@@ -56,5 +58,8 @@ public class EventManager : MonoBehaviour
 	{
 		//shit UI
 		yield return new WaitForSeconds(0.5f);
+
+		bossHealthBar.SetActive(true);
+		playerHealthBar.SetActive(true);
 	}
 }

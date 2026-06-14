@@ -2,6 +2,7 @@
 using UnityEngine.InputSystem;
 using System;
 using System.Collections;
+using UnityEngine.SceneManagement;
 
 public class PlayerController : MonoBehaviour
 {
@@ -236,16 +237,18 @@ public class PlayerController : MonoBehaviour
 
 	private void Die()
 	{
-		GameObject loaderObj = GameObject.Find("BossLoader");
+		SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+		//GameObject loaderObj = GameObject.Find("BossLoader");
 
-		if (loaderObj != null)
-		{
-			FlexibleSceneLoader loader = FindObjectOfType<FlexibleSceneLoader>();
-			if (loader != null)
-			{
-				loader.TriggerManualTransition();
-			}
-		}
+		//if (loaderObj != null)
+		//{
+		//	Debug.Log(loaderObj);
+		//	FlexibleSceneLoader loader = FindObjectOfType<FlexibleSceneLoader>();
+		//	if (loader != null)
+		//	{
+		//		loader.TriggerManualTransition();
+		//	}
+		//}
 	}
 
 	// SHOOTING //

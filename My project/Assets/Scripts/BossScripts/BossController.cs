@@ -94,6 +94,8 @@ public class BossController : MonoBehaviour
 	public bool shouldAscend = false;
 	public bool isAscending = false;
 
+	[SerializeField] private Renderer bossRenderer;
+
 	private float laserSpinLeft = 0f;
 	public static event Action<float, float> OnHealthChanged;
 
@@ -427,11 +429,19 @@ public class BossController : MonoBehaviour
 		mySM.PlayOnce("bossHit");
 		currentHealth = Mathf.Clamp(currentHealth - damageAmount, 0f, maxHealth);
 		OnHealthChanged?.Invoke(currentHealth, maxHealth);
+		StartCoroutine(BlinkEffect());
 
 		if (currentHealth <= 0f)
 		{
 			Die();
 		}
+	}
+
+	private IEnumerator BlinkEffect()
+	{
+		bossRenderer.material.SetFloat("_BlinkFactor", 0.5f);
+		yield return new WaitForSeconds(0.1f);
+		bossRenderer.material.SetFloat("_BlinkFactor", 0f);
 	}
 
 
