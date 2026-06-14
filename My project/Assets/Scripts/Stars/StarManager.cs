@@ -6,7 +6,7 @@ public class StarManager : MonoBehaviour
 {
 	public Transform player;
 	public float absorptionSpeed = 25f;
-	public int totalStarsToCollect = 10;
+	public int totalStarsToCollect = 4;
 	public Rigidbody playerRb;
 
 	//Boss spawn vars//
@@ -188,7 +188,7 @@ public class StarManager : MonoBehaviour
 			{
 				star.gameObject.SetActive(true); 
 				star.transform.position = player.position; 
-				star.SetAppearance(Color.yellow, 5.0f, 0.2f);
+				star.SetAppearance(Color.yellow, 0.5f, 0.2f);
 			}
 		}
 		isOrbiting = true;
