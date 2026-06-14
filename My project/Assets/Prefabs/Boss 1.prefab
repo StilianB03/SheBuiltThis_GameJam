@@ -295,7 +295,7 @@ MonoBehaviour:
   upAttack2Chance: 50
   laserAttackChance: 50
   normalAttack2Chance: 50
-  laserRotationSpeed: 400
+  laserRotationSpeed: 360
   minRotationCount: 2
   maxRotationCount: 5
   laserTriggerCollider: {fileID: 7888015856734556842}

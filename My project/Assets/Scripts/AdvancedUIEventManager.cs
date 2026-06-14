@@ -1,84 +1,100 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.UI; // Required for Image
-using TMPro; // Required for TextMeshPro
+using UnityEngine.SceneManagement;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Utilities;
 
-[RequireComponent(typeof(CanvasGroup))] // Failsafe for the main script object
+[RequireComponent(typeof(CanvasGroup))]
 public class AdvancedUIEventManager : MonoBehaviour
 {
+    [Header("0. Pre-Fade Out (Current UI)")]
+    [Tooltip("Drag the CanvasGroup containing your current gameplay HUD elements here to fade them out first.")]
+    [SerializeField] private CanvasGroup gameplayUICanvasGroup;
+    [SerializeField] private float gameplayFadeOutDuration = 0.5f;
+
     [Header("1. Fade-to-Black Settings")]
-    [Tooltip("Drag your black Image UI object here.")]
-    [SerializeField] private Image blackOverlayImage;
+    [Tooltip("Drag your black screen UI GameObject here.")]
+    [SerializeField] private GameObject blackOverlayObject;
     [Tooltip("Duration in seconds for the screen to become completely black.")]
     [SerializeField] private float backgroundFadeDuration = 2f;
 
     [Header("2. Text Settings")]
-    [Tooltip("Drag your TextMeshPro GameObject here.")]
-    [SerializeField] private TextMeshProUGUI textToDisplay;
+    [Tooltip("Drag your TextMeshPro UI GameObject here.")]
+    [SerializeField] private GameObject textToDisplayObject;
     [Tooltip("Duration in seconds for the text to become fully visible.")]
     [SerializeField] private float textFadeDuration = 1f;
 
-    [Header("Timing")]
+    [Header("Timing & Flow Setup")]
     [Tooltip("If true, text fades in AFTER background is black. If false, both fade in simultaneously.")]
     [SerializeField] private bool sequenceTextAfterBackground = true;
+    [Tooltip("If enabled, pressing ANY key after visuals fade in will trigger the scene change.")]
+    [SerializeField] private bool loadOnAnyKeyPress = true;
+    [Tooltip("If enabled, this script will close the application instead of loading a scene.")]
+    [SerializeField] private bool quitGame = false;
+
+    [Header("Next Scene & Animator Settings")]
+    [Tooltip("The exact name of the scene you want to load next.")]
+    [SerializeField] private string sceneToLoad;
+    [Tooltip("The Animator component controlling your final scene transition animations.")]
+    [SerializeField] private Animator transitionAnimator;
+    [Tooltip("Time in seconds to wait for the animator's 'Start' animation to finish before swapping scenes.")]
+    [SerializeField] private float transitionTime = 1f;
 
     private CanvasGroup blackOverlayCanvasGroup;
     private CanvasGroup textCanvasGroup;
+    private System.IDisposable inputListener;
+
     private bool sequenceTriggered = false;
+    private bool visualsCompleted = false;
+    private bool isSwappingScenes = false;
 
     void Awake()
     {
-        // 1. Set up the Black Overlay
-        if (blackOverlayImage != null)
+        // 1. Set up the Black Overlay (Identical to text logic)
+        if (blackOverlayObject != null)
         {
-            // We use CanvasGroup on the Image because it's more reliable for fading
-            blackOverlayCanvasGroup = blackOverlayImage.GetComponent<CanvasGroup>();
+            blackOverlayCanvasGroup = blackOverlayObject.GetComponent<CanvasGroup>();
             if (blackOverlayCanvasGroup == null)
             {
-                // Add the CanvasGroup if the user forgot
-                blackOverlayCanvasGroup = blackOverlayImage.gameObject.AddComponent<CanvasGroup>();
+                blackOverlayCanvasGroup = blackOverlayObject.AddComponent<CanvasGroup>();
             }
-
-            // Start state: Transparent (alpha 0)
             blackOverlayCanvasGroup.alpha = 0f;
-            // Ensure the black image doesn't block raycasts while it's transparent
             blackOverlayCanvasGroup.blocksRaycasts = false;
         }
         else
         {
-            Debug.LogError("AdvancedUIEventManager: Black Overlay Image reference missing.");
+            Debug.LogError("AdvancedUIEventManager: Black Overlay GameObject reference missing.");
         }
 
-        // 2. Set up the TextMeshPro
-        if (textToDisplay != null)
+        // 2. Set up the TextMeshPro GameObject
+        if (textToDisplayObject != null)
         {
-            textCanvasGroup = textToDisplay.GetComponent<CanvasGroup>();
+            textCanvasGroup = textToDisplayObject.GetComponent<CanvasGroup>();
             if (textCanvasGroup == null)
             {
-                // Add the CanvasGroup to text if missing
-                textCanvasGroup = textToDisplay.gameObject.AddComponent<CanvasGroup>();
+                textCanvasGroup = textToDisplayObject.AddComponent<CanvasGroup>();
             }
-
-            // Start state: Invisible
             textCanvasGroup.alpha = 0f;
         }
         else
         {
-            Debug.LogError("AdvancedUIEventManager: TextToDisplay reference missing.");
+            Debug.LogError("AdvancedUIEventManager: TextToDisplay GameObject reference missing.");
         }
     }
 
+    void OnDisable()
+    {
+        CleanupListener();
+    }
+
     /// <summary>
-    /// Call this function from your external event (e.g., when the player reaches the goal)
-    /// to trigger the fade sequence.
+    /// Call this from BossController.cs to trigger the whole sequence.
     /// </summary>
     public void TriggerEndingSequence()
     {
-        // Prevent accidental double triggers
         if (sequenceTriggered) return;
         sequenceTriggered = true;
 
-        // Block UI interactions now that the event started
         if (blackOverlayCanvasGroup != null)
         {
             blackOverlayCanvasGroup.blocksRaycasts = true;
@@ -89,26 +105,81 @@ public class AdvancedUIEventManager : MonoBehaviour
 
     private IEnumerator ExecuteSequence()
     {
+        // STEP 0: Fade out existing gameplay UI elements first
+        if (gameplayUICanvasGroup != null)
+        {
+            gameplayUICanvasGroup.blocksRaycasts = false;
+            yield return StartCoroutine(FadeCanvasGroup(gameplayUICanvasGroup, 1f, 0f, gameplayFadeOutDuration));
+        }
+
+        // STEP 1 & 2: Fade in Black Screen and Text
         if (sequenceTextAfterBackground)
         {
-            // SEQUENCE: Black first, then Text
             yield return StartCoroutine(FadeCanvasGroup(blackOverlayCanvasGroup, 0f, 1f, backgroundFadeDuration));
             yield return StartCoroutine(FadeCanvasGroup(textCanvasGroup, 0f, 1f, textFadeDuration));
         }
         else
         {
-            // PARALLEL: Fade both together
             StartCoroutine(FadeCanvasGroup(blackOverlayCanvasGroup, 0f, 1f, backgroundFadeDuration));
             StartCoroutine(FadeCanvasGroup(textCanvasGroup, 0f, 1f, textFadeDuration));
-
-            // Wait for the longer fade before continuing the coroutine
             yield return new WaitForSeconds(Mathf.Max(backgroundFadeDuration, textFadeDuration));
         }
 
-        Debug.Log("Ending Sequence Complete.");
+        visualsCompleted = true;
+        Debug.Log("Visual transitions complete. Waiting for player input...");
+
+        if (loadOnAnyKeyPress)
+        {
+            inputListener = InputSystem.onAnyButtonPress.Call(control => HandleInputTrigger());
+        }
     }
 
-    // Generic coroutine that fades ANY CanvasGroup from a starting alpha to an ending alpha
+    private void HandleInputTrigger()
+    {
+        if (!visualsCompleted || isSwappingScenes) return;
+
+        isSwappingScenes = true;
+        CleanupListener();
+
+        StartCoroutine(LoadNextTarget());
+    }
+
+    public void TriggerManualSceneLoad()
+    {
+        HandleInputTrigger();
+    }
+
+    private IEnumerator LoadNextTarget()
+    {
+        if (transitionAnimator != null)
+        {
+            transitionAnimator.SetTrigger("Start");
+            yield return new WaitForSeconds(transitionTime);
+        }
+
+        if (quitGame)
+        {
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
+        }
+        else if (!string.IsNullOrEmpty(sceneToLoad))
+        {
+            AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneToLoad);
+            while (!asyncLoad.isDone)
+            {
+                yield return null;
+            }
+        }
+        else
+        {
+            Debug.LogError("Scene To Load is empty! Assign a scene name in the Inspector.");
+            isSwappingScenes = false;
+        }
+    }
+
     private IEnumerator FadeCanvasGroup(CanvasGroup cg, float startAlpha, float endAlpha, float duration)
     {
         if (cg == null || duration <= 0)
@@ -121,13 +192,19 @@ public class AdvancedUIEventManager : MonoBehaviour
         while (counter < duration)
         {
             counter += Time.deltaTime;
-            float lerpValue = counter / duration;
-            // Use smoothstep for a softer "ease-in/ease-out" transition
-            cg.alpha = Mathf.Lerp(startAlpha, endAlpha, lerpValue);
+            cg.alpha = Mathf.Lerp(startAlpha, endAlpha, counter / duration);
             yield return null;
         }
 
-        // Ensure we hit the exact final value
         cg.alpha = endAlpha;
+    }
+
+    private void CleanupListener()
+    {
+        if (inputListener != null)
+        {
+            inputListener.Dispose();
+            inputListener = null;
+        }
     }
 }

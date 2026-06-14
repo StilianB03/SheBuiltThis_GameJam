@@ -501,8 +501,8 @@ public class BossController : MonoBehaviour
 				yield return null;
 			}
 
-			FindObjectOfType<AdvancedUIEventManager>().TriggerEndingSequence();
-		}
+            FindObjectOfType<AdvancedUIEventManager>().TriggerEndingSequence();
+        }
 	}
 
 	//ENTRANCE ANIM//
