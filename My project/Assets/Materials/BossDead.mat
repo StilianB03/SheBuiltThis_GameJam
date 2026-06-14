@@ -152,7 +152,7 @@ Material:
     - _ZTest: 4
     - _ZWrite: 1
     - _ZWriteControl: 1
-    - _emissive: 3.78
+    - _emissive: 2
     - _power: 3.22
     - _transparency: -0.5
     m_Colors:

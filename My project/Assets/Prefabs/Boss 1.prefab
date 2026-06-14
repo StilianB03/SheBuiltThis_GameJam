@@ -469,8 +469,8 @@ MonoBehaviour:
   normalHeight: 4.17
   hiddenHeight: -2.2
   upHeight: 8.3
-  minNormalTime: 6
-  maxNormalTime: 12
+  minNormalTime: 5
+  maxNormalTime: 30
   minHiddenTime: 2
   maxHiddenTime: 7
   minUpTime: 2
@@ -490,12 +490,12 @@ MonoBehaviour:
   upAttack2Chance: 50
   laserAttackChance: 50
   normalAttack2Chance: 50
-  laserRotationSpeed: 450
-  minRotationCount: 2
-  maxRotationCount: 5
+  laserRotationSpeed: 300
+  minRotationCount: 1
+  maxRotationCount: 2
   laserTriggerCollider: {fileID: 7888015856734556842}
   laserPivot: {fileID: 6794258211816606788}
-  attackCooldown: 2
+  attackCooldown: 0.3
   playerTransform: {fileID: 0}
   isAttacking: 0
   stateTimeExpired: 0
