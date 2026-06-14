@@ -4,7 +4,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Utilities;
 
-public class FlexibleSceneLoader : MonoBehaviour
+public class StartScreenLoader : MonoBehaviour
 {
     [Header("Mode Settings")]
     [Tooltip("If enabled, this script will close the application instead of loading a scene. Perfect for End/Game Over scenes.")]
@@ -16,7 +16,7 @@ public class FlexibleSceneLoader : MonoBehaviour
 
     [Header("Input Settings")]
     [Tooltip("If enabled, pressing ANY key/button will trigger the transition. Disable this for your main game scene.")]
-    [SerializeField] private bool loadOnAnyKeyPress = false; // Turned off by default for main scenes
+    [SerializeField] private bool loadOnAnyKeyPress = true;
 
     [Header("Transition References")]
     [Tooltip("The Animator component controlling the transition animations.")]
@@ -27,35 +27,24 @@ public class FlexibleSceneLoader : MonoBehaviour
     [SerializeField] private float transitionTime = 1f;
 
     [Header("Audio Settings")]
-    [Tooltip("AudioSource playing the looping background music.")]
+    [Tooltip("AudioSource playing the looping background noise.")]
     [SerializeField] private AudioSource bgmSource;
 
-    [Tooltip("AudioSource used to play a transition exit sound (Optional).")]
+    [Tooltip("AudioSource used to play the button/key click SFX.")]
     [SerializeField] private AudioSource sfxSource;
 
-    [Tooltip("The sound effect that plays the moment the scene transition begins (Optional).")]
+    [Tooltip("The sound effect that plays the moment a key is pressed.")]
     [SerializeField] private AudioClip proceedSFXClip;
-
-    [Tooltip("How long it takes for the music to smoothly reach full volume when the scene starts.")]
-    [SerializeField] private float fadeInDuration = 1.5f;
 
     private System.IDisposable inputListener;
     private bool isTransitioning = false;
-    private float targetMaxVolume = 1f;
 
     void Start()
     {
-        if (bgmSource != null)
+        // Ensure background music/noise is actively playing on start
+        if (bgmSource && !bgmSource.isPlaying)
         {
-            // 1. Remember the ideal volume you set in the Inspector
-            targetMaxVolume = bgmSource.volume;
-
-            // 2. Mute it instantly before starting the fade
-            bgmSource.volume = 0f;
             bgmSource.Play();
-
-            // 3. Kick off the gradual entry
-            StartCoroutine(FadeInBGM());
         }
     }
 
@@ -82,8 +71,6 @@ public class FlexibleSceneLoader : MonoBehaviour
         StartCoroutine(LoadLevelSequence());
     }
 
-    // Call this method from your gameplay events (e.g., inside a trigger zone, 
-    // when a boss dies, or from a UI button click) to leave the scene!
     public void TriggerManualTransition()
     {
         if (isTransitioning) return;
@@ -92,30 +79,15 @@ public class FlexibleSceneLoader : MonoBehaviour
         StartCoroutine(LoadLevelSequence());
     }
 
-    private IEnumerator FadeInBGM()
-    {
-        float currentTime = 0;
-
-        while (currentTime < fadeInDuration)
-        {
-            currentTime += Time.deltaTime;
-            // Slide up from 0 to whatever your target max volume was
-            bgmSource.volume = Mathf.Lerp(0f, targetMaxVolume, currentTime / fadeInDuration);
-            yield return null;
-        }
-
-        bgmSource.volume = targetMaxVolume;
-    }
-
     private IEnumerator LoadLevelSequence()
     {
-        // 1. Play exit SFX if one is provided
+        // 1. Play the crisp audio feedback instantly
         if (sfxSource && proceedSFXClip)
         {
             sfxSource.PlayOneShot(proceedSFXClip);
         }
 
-        // 2. Trigger visual transition
+        // 2. Trigger the fade/wipe animation
         if (transition != null)
         {
             transition.SetTrigger("Start");
@@ -125,7 +97,7 @@ public class FlexibleSceneLoader : MonoBehaviour
             Debug.LogWarning("Transition Animator is missing! Proceeding without animation.");
         }
 
-        // 3. Simultaneously wait for the animator AND melt away the BGM
+        // 3. Simultaneously wait for the animator AND fade out the BGM
         float startVolume = bgmSource != null ? bgmSource.volume : 0f;
         float currentTime = 0;
 
@@ -134,31 +106,37 @@ public class FlexibleSceneLoader : MonoBehaviour
             currentTime += Time.deltaTime;
             if (bgmSource != null)
             {
-                // Fades out using the transition time so audio matches the visual fade
+                // Smoothly lower volume based on your transitionTime progress
                 bgmSource.volume = Mathf.Lerp(startVolume, 0, currentTime / transitionTime);
             }
             yield return null;
         }
 
+        // Clean stop once completely silent
         if (bgmSource != null)
         {
             bgmSource.volume = 0;
             bgmSource.Stop();
         }
 
-        // 4. Load the next scene or quit
+        // 4. Perform the actual scene swap OR quit the game
         if (quitGame)
         {
             Debug.Log("Quit Game triggered.");
 #if UNITY_EDITOR
+            // This stops the play mode inside the Unity Editor
             UnityEditor.EditorApplication.isPlaying = false;
 #else
+            // This closes the actual built game (.exe / .app)
             Application.Quit();
 #endif
         }
         else if (!string.IsNullOrEmpty(sceneToLoad))
         {
+            // Start loading the scene in the background asynchronously
             AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneToLoad);
+
+            // Wait until the asynchronous scene fully finishes loading
             while (!asyncLoad.isDone)
             {
                 yield return null;
@@ -166,7 +144,7 @@ public class FlexibleSceneLoader : MonoBehaviour
         }
         else
         {
-            Debug.LogError("Scene To Load is empty! Cannot switch scenes.");
+            Debug.LogError("Scene To Load is empty! Cannot switch scenes. Please assign a scene name in the Inspector.");
             isTransitioning = false;
         }
     }

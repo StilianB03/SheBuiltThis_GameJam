@@ -40,6 +40,14 @@ public class AdvancedUIEventManager : MonoBehaviour
     [Tooltip("Time in seconds to wait for the animator's 'Start' animation to finish before swapping scenes.")]
     [SerializeField] private float transitionTime = 1f;
 
+    [Header("Audio Settings")]
+    [Tooltip("The AudioSource playing the looping background music for this level.")]
+    [SerializeField] private AudioSource bgmSource;
+    [Tooltip("How long it takes for the music to smoothly fade in when the scene starts.")]
+    [SerializeField] private float musicFadeInDuration = 2f;
+    [Tooltip("How long it takes for the music to fade to complete silence when the ending sequence begins.")]
+    [SerializeField] private float musicFadeOutDuration = 2f;
+
     private CanvasGroup blackOverlayCanvasGroup;
     private CanvasGroup textCanvasGroup;
     private System.IDisposable inputListener;
@@ -47,6 +55,7 @@ public class AdvancedUIEventManager : MonoBehaviour
     private bool sequenceTriggered = false;
     private bool visualsCompleted = false;
     private bool isSwappingScenes = false;
+    private float targetMaxVolume = 1f;
 
     void Awake()
     {
@@ -82,6 +91,23 @@ public class AdvancedUIEventManager : MonoBehaviour
         }
     }
 
+    void Start()
+    {
+        // Smoothly fade the music in right as the player gains control
+        if (bgmSource != null)
+        {
+            targetMaxVolume = bgmSource.volume; // Cache your preferred volume from the Inspector
+            bgmSource.volume = 0f;
+
+            if (!bgmSource.isPlaying)
+            {
+                bgmSource.Play();
+            }
+
+            StartCoroutine(FadeInMusic());
+        }
+    }
+
     void OnDisable()
     {
         CleanupListener();
@@ -105,6 +131,12 @@ public class AdvancedUIEventManager : MonoBehaviour
 
     private IEnumerator ExecuteSequence()
     {
+        // Kick off the BGM fade-out asynchronously so it dissolves perfectly alongside the UI
+        if (bgmSource != null)
+        {
+            StartCoroutine(FadeOutMusic());
+        }
+
         // STEP 0: Fade out existing gameplay UI elements first
         if (gameplayUICanvasGroup != null)
         {
@@ -197,6 +229,32 @@ public class AdvancedUIEventManager : MonoBehaviour
         }
 
         cg.alpha = endAlpha;
+    }
+
+    private IEnumerator FadeInMusic()
+    {
+        float counter = 0f;
+        while (counter < musicFadeInDuration)
+        {
+            counter += Time.deltaTime;
+            bgmSource.volume = Mathf.Lerp(0f, targetMaxVolume, counter / musicFadeInDuration);
+            yield return null;
+        }
+        bgmSource.volume = targetMaxVolume;
+    }
+
+    private IEnumerator FadeOutMusic()
+    {
+        float startVolume = bgmSource.volume;
+        float counter = 0f;
+        while (counter < musicFadeOutDuration)
+        {
+            counter += Time.deltaTime;
+            bgmSource.volume = Mathf.Lerp(startVolume, 0f, counter / musicFadeOutDuration);
+            yield return null;
+        }
+        bgmSource.volume = 0f;
+        bgmSource.Stop();
     }
 
     private void CleanupListener()
