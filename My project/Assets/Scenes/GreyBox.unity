@@ -939,6 +939,7 @@ MonoBehaviour:
   cameraHeight: 6
   projectileData: {fileID: 11400000, guid: 6f5bbbb50b6bc394eadedba237151931, type: 2}
   shootPoint: {fileID: 1677349509}
+  fireRate: 0.75
   isFinalBoss: 0
 --- !u!54 &1677349506
 Rigidbody:
