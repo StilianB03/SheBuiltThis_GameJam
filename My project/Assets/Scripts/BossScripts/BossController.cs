@@ -46,7 +46,7 @@ public class BossController : MonoBehaviour
 	public float baseEmissionIntensity = 1f; 
 	public float chargeDuration = 3.0f;
 	public float fadeDuration = 5.0f;
-	public float ascendDuration = 7.0f;
+	public float ascendSpeed = 7.0f;
 
 	[Header("State Transition Chances ")]
 	[Range(0, 100)] public float normalToHidden = 50f;
@@ -80,7 +80,8 @@ public class BossController : MonoBehaviour
 	private float targetHeight;
 
 	private bool isSpawning = true;
-	private bool shouldAscend = false;
+	public bool shouldAscend = false;
+	public bool isAscending = false;
 
 	private float laserSpinLeft = 0f;
 	public static event Action<float, float> OnHealthChanged;
@@ -116,28 +117,34 @@ public class BossController : MonoBehaviour
 	// FIXED UPDATE //
 	void FixedUpdate()
 	{
-		if (isSpawning) return;
-
-		HandleStateTimer();
-		HandleMovement();
-		if (playerTransform == null) return;
-
-		if (isAttacking)
+		if (isAscending)
 		{
-			ExecuteAttack();
+			transform.position += Vector3.up * ascendSpeed * Time.deltaTime;
 		}
 		else
 		{
-			//If not attacking - Follow player / change state / chose attack
-			HandleRotation();
+			if (isSpawning) return;
+			HandleStateTimer();
+			HandleMovement();
+			if (playerTransform == null) return;
 
-			if (!stateTimeExpired)
+			if (isAttacking)
 			{
-				PickAttack();
+				ExecuteAttack();
 			}
 			else
 			{
-				TransitionToState();
+				//If not attacking - Follow player / change state / chose attack
+				HandleRotation();
+
+				if (!stateTimeExpired)
+				{
+					PickAttack();
+				}
+				else
+				{
+					TransitionToState();
+				}
 			}
 		}
 	}
@@ -463,20 +470,28 @@ public class BossController : MonoBehaviour
 			yield return null;
 		}
 
+		//Spawn stars
+		StarManager manager = FindObjectOfType<StarManager>();
+		if (manager != null)
+		{
+			yield return StartCoroutine(manager.StartAscendSequence());
+		}
+
 		elapsed = 0f;
 		if (shouldAscend) {
-			while (elapsed < ascendDuration)
+
+			PlayerController playerScript = FindObjectOfType<PlayerController>();
+			if (playerScript != null)
 			{
-				HandleRotation();
-				elapsed += Time.deltaTime;
-				float t = elapsed / 2f;
-
-				transform.position =
-					Vector3.Lerp(startPos, risePos, t);
-
-				yield return null;
+				playerScript.SetAscensionMode(true);
+				playerScript.transform.SetParent(this.transform);
 			}
-			Destroy(gameObject);
+
+			foreach (var star in manager.collectedStars) 
+			{
+				if (star != null) star.transform.SetParent(this.transform);
+			}
+			isAscending = true;
 		}
 	}
 

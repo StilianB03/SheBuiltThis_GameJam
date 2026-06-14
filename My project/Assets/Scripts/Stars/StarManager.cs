@@ -4,12 +4,12 @@ using System.Collections.Generic;
 
 public class StarManager : MonoBehaviour
 {
-	public int totalStarsToCollect = 5; 
-	public Transform player;            
+	public int totalStarsToCollect = 5;
+	public Transform player;
 	public float absorptionSpeed = 15f;
 
 	//Boss spawn vars//
-	public GameObject bossPrefab; 
+	public GameObject bossPrefab;
 	public float bossSpawnY = 1.55f;
 
 	//Emission//
@@ -17,17 +17,33 @@ public class StarManager : MonoBehaviour
 	private float currentIntensity = 1.0f;
 	private float intensityIncrement = 16.0f;
 
-	public Renderer playerRenderer; 
+	public Renderer playerRenderer;
 	private Material playerMaterial;
 	private Queue<StarCompanion> starQueue = new Queue<StarCompanion>();
+	public List<StarCompanion> collectedStars = new List<StarCompanion>();
 
 	private bool sequenceStarted = false;
+	private bool isOrbiting = false;
+	private float orbitTimer = 0f;
+
+	//Orbit vars//
+	public float radius = 1.0f;
+	public float rotationSpeed = 1.0f;
 
 	void Start()
 	{
 		if (playerRenderer != null)
 		{
 			playerMaterial = playerRenderer.material;
+		}
+	}
+
+	void Update()
+	{
+		if (isOrbiting)
+		{
+			orbitTimer += Time.deltaTime;
+			UpdateStarOrbits();
 		}
 	}
 
@@ -52,7 +68,7 @@ public class StarManager : MonoBehaviour
 			StarCompanion star = starQueue.Dequeue();
 			if (star == null) continue;
 
-			StartCoroutine(AbsorbSingleStar(star)); 
+			StartCoroutine(AbsorbSingleStar(star));
 			yield return new WaitForSeconds(0.2f);
 		}
 
@@ -60,12 +76,12 @@ public class StarManager : MonoBehaviour
 		yield return new WaitForSeconds(1.0f);
 		if (bossPrefab != null)
 		{
-			Vector3 spawnPos = new Vector3(0, bossSpawnY - 7.55f, 0); 
+			Vector3 spawnPos = new Vector3(0, bossSpawnY - 7.55f, 0);
 			Instantiate(bossPrefab, spawnPos, Quaternion.identity);
 		}
 	}
 
-	private IEnumerator AbsorbSingleStar(StarCompanion star) 
+	private IEnumerator AbsorbSingleStar(StarCompanion star)
 	{
 		float orbitRadius = 4.5f;
 		float orbitSpeed = 7.5f;
@@ -99,7 +115,8 @@ public class StarManager : MonoBehaviour
 		//Emission
 		currentIntensity += intensityIncrement;
 		ApplyEmission(currentIntensity);
-		Destroy(star.gameObject);
+		star.gameObject.SetActive(false);
+		collectedStars.Add(star);
 
 		yield return new WaitForSeconds(0.3f);
 		yield return StartCoroutine(FadeToBaseIntensity(1.0f));
@@ -123,10 +140,10 @@ public class StarManager : MonoBehaviour
 			yield return null;
 		}
 
-		currentIntensity = targetIntensity; 
+		currentIntensity = targetIntensity;
 		ApplyEmission(currentIntensity);
 	}
-	
+
 	private void ApplyEmission(float intensity)
 	{
 		if (playerMaterial != null)
@@ -135,6 +152,41 @@ public class StarManager : MonoBehaviour
 			playerMaterial.SetColor("_EmissionColor", finalColor);
 
 			DynamicGI.SetEmissive(playerRenderer, finalColor);
+		}
+	}
+
+	private void UpdateStarOrbits()
+	{
+		int count = collectedStars.Count;
+
+		for (int i = 0; i < count; i++)
+		{
+			StarCompanion star = collectedStars[i];
+			if (star == null) continue;
+
+			float angle = (i * Mathf.PI * 2f / count) + (orbitTimer * rotationSpeed);
+
+			Vector3 offset = new Vector3(Mathf.Cos(angle), 1f, Mathf.Sin(angle)) * radius;
+			star.transform.position = player.position + offset;
+		}
+	}
+
+	public IEnumerator StartAscendSequence()
+	{
+		if (player == null) yield break;
+
+		foreach (var star in collectedStars)
+		{
+			if (star != null) star.gameObject.SetActive(true);
+		}
+		isOrbiting = true;
+
+		yield return new WaitForSeconds(2.0f);
+
+		BossController bossScript = FindObjectOfType<BossController>();
+		if (bossScript != null)
+		{
+			bossScript.shouldAscend = true;
 		}
 	}
 }

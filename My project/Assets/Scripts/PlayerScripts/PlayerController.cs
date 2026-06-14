@@ -101,6 +101,9 @@ public class PlayerController : MonoBehaviour
 
 	void FixedUpdate()
 	{
+		if (rb.isKinematic)
+			return;
+
 		GroundCheck();
 		HandleLocomotion();
 		ApplyJumpGravity();
@@ -248,6 +251,29 @@ public class PlayerController : MonoBehaviour
 			shootAction.started -= ctx => isShootingHeld = true;
 			shootAction.canceled -= ctx => isShootingHeld = false;
 			shootAction.Disable();
+		}
+	}
+
+	public void SetAscensionMode(bool isAscending)
+	{
+		if (rb == null) return;
+		if (isAscending)
+		{
+			// 1. Set to non-kinematic first so we are allowed to modify velocity
+			rb.isKinematic = false;
+
+			// 2. Now we can safely zero out the physics forces
+			rb.linearVelocity = Vector3.zero;
+			rb.angularVelocity = Vector3.zero;
+
+			// 3. Finally, lock it into kinematic mode
+			rb.isKinematic = true;
+		}
+		else
+		{
+			// When turning off, reverse the order: 
+			// Kinematic off first, then resume physics
+			rb.isKinematic = false;
 		}
 	}
 }
