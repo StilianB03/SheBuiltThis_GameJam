@@ -49,6 +49,7 @@ public class PlayerController : MonoBehaviour
 	private InputAction runAction;
 
 	private Vector2 moveInput;
+	private SoundManager mySM;
 	public bool isFinalBoss = false;
 
 	public static event Action<float, float> OnHealthChanged;
@@ -83,6 +84,9 @@ public class PlayerController : MonoBehaviour
 
 		//Placeholder
 		isFinalBoss = true;
+
+		//Sound Manager
+		mySM = UnityEngine.Object.FindFirstObjectByType<SoundManager>();
 	}
 
 	void Update()
@@ -249,6 +253,7 @@ public class PlayerController : MonoBehaviour
 	{
 		if (projectileData?.projectilePrefab != null && shootPoint != null)
 		{
+			mySM.PlayOnce("playerProjectile");
 			GameObject bulletObj = Instantiate(
 				projectileData.projectilePrefab,
 				shootPoint.position,

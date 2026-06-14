@@ -1,4 +1,6 @@
-	using UnityEngine;
+using UnityEngine;
+using System.Collections;
+using System;
 
 public class StarCompanion : MonoBehaviour
 {
@@ -14,11 +16,17 @@ public class StarCompanion : MonoBehaviour
 
 	private bool isCollected = false; 
 	private bool isRegistered = false;
+	private bool partnerEffectTriggered = false;
+	
+	public enum StarType { Regular, Partner }
+	public StarType type;
 	private Vector3 startPosition;
+	private SoundManager mySM;
 
 	void Start()
 	{
 		startPosition = transform.position;
+		mySM = UnityEngine.Object.FindFirstObjectByType<SoundManager>();
 	}
 
 	void FixedUpdate()
@@ -28,6 +36,12 @@ public class StarCompanion : MonoBehaviour
 		float distance = Vector3.Distance(transform.position, player.position);
 		if (distance < activationRange)
 		{
+			if (type == StarType.Partner && !partnerEffectTriggered)
+			{
+				StartCoroutine(FoundPartner());
+				partnerEffectTriggered = true;
+			}
+
 			isCollected = true;
 		}
 
@@ -67,5 +81,11 @@ public class StarCompanion : MonoBehaviour
 		Vector3 targetPos = player.position + offset;
 		transform.position = Vector3.Lerp(transform.position, targetPos, followSpeed * Time.deltaTime);
 		transform.Rotate(Vector3.up * 100 * Time.deltaTime);
+	}
+
+	private IEnumerator FoundPartner()
+	{
+		mySM.PlayOnce("starMeeting"); 
+		yield break;
 	}
 }

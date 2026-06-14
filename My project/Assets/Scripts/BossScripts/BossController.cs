@@ -69,8 +69,14 @@ public class BossController : MonoBehaviour
 	public GameObject laserTriggerCollider; 
 	private Renderer laserRend;
 
+
+	[Header("Delay Between Attacks")]
+	public float attackCooldown = 2.0f;
+	private float cooldownTimer = 0f;
+
 	[Header("References")]
-	public Transform playerTransform;
+	public Transform playerTransform; 
+	private SoundManager mySM;
 
 	private bool isTurning = false;
 	[SerializeField] private bool isAttacking = false;
@@ -113,6 +119,7 @@ public class BossController : MonoBehaviour
 				laserRend.enabled = true;
 		}
 
+		mySM = UnityEngine.Object.FindFirstObjectByType<SoundManager>();
 
 		currentHealth = maxHealth;
 		OnHealthChanged?.Invoke(currentHealth, maxHealth);
@@ -142,16 +149,24 @@ public class BossController : MonoBehaviour
 			}
 			else
 			{
-				//If not attacking - Follow player / change state / chose attack
-				HandleRotation();
-
-				if (!stateTimeExpired)
+				if (cooldownTimer > 0f)
 				{
-					PickAttack();
+					cooldownTimer -= Time.fixedDeltaTime;
+					HandleRotation(); // Keep following player during cooldown
 				}
 				else
-				{
-					TransitionToState();
+				{ 
+					//If not attacking - Follow player / change state / chose attack
+					HandleRotation();
+
+					if (!stateTimeExpired)
+					{
+						PickAttack();
+					}
+					else
+					{
+						TransitionToState();
+					}
 				}
 			}
 		}
@@ -223,6 +238,7 @@ public class BossController : MonoBehaviour
 	void EnterState(BossState newState)
 	{
 		currentState = newState;
+		mySM.PlayOnce("bossSwoosh");
 
 		switch (currentState)
 		{
@@ -308,7 +324,8 @@ public class BossController : MonoBehaviour
 	public void OnAttackComplete()
 	{
 		currentAttack = BossAttack.None; 
-		isAttacking = false;
+		isAttacking = false; 
+		cooldownTimer = attackCooldown;
 	}
 
 	// ATTACKS //
@@ -320,6 +337,7 @@ public class BossController : MonoBehaviour
 		laserSpinLeft = rotations * 360f;
 		spinDirection = (UnityEngine.Random.value > 0.5f) ? 1f : -1f;
 
+		mySM.PlayLooping("bossLaser");
 		if (laserRend != null) laserRend.enabled = true; 
 		if (laserTriggerCollider != null) laserTriggerCollider.SetActive(true);
 	}
@@ -356,6 +374,7 @@ public class BossController : MonoBehaviour
 
 					if (laserSpinLeft <= 0f)
 					{
+						mySM.StopLooping();
 						if (laserRend != null) laserRend.enabled = false;
 						if (laserTriggerCollider != null) laserTriggerCollider.SetActive(false);
 						OnAttackComplete();
@@ -384,6 +403,7 @@ public class BossController : MonoBehaviour
 	// DAMAGE HANDLING //
 	public void TakeDamage(float damageAmount)
 	{
+		mySM.PlayOnce("bossHit");
 		currentHealth = Mathf.Clamp(currentHealth - damageAmount, 0f, maxHealth);
 		OnHealthChanged?.Invoke(currentHealth, maxHealth);
 
@@ -447,6 +467,7 @@ public class BossController : MonoBehaviour
 			}
 		}
 
+		mySM.PlayLooping("bossAscend");
 		//Fade down and rise
 		elapsed = 0f;
 

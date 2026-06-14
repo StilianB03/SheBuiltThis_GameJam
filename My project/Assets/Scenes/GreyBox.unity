@@ -214,6 +214,7 @@ MonoBehaviour:
   offset: {x: 0.5, y: 1.8, z: 1.5}
   hoverSpeed: 3
   hoverHeight: 0.25
+  type: 0
 --- !u!1 &147076512 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: f5dc15f56a32f9149898c5e91b08eb9c, type: 3}
@@ -438,6 +439,7 @@ MonoBehaviour:
   offset: {x: -1, y: 1, z: 0}
   hoverSpeed: 3
   hoverHeight: 0.25
+  type: 1
 --- !u!1 &583370337
 GameObject:
   m_ObjectHideFlags: 0
@@ -642,6 +644,7 @@ MonoBehaviour:
   offset: {x: -1, y: 1.2, z: -1}
   hoverSpeed: 3
   hoverHeight: 0.25
+  type: 0
 --- !u!114 &941290764 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6061302973140120383, guid: 69e28af550c88fd48ac1e722c48a562b, type: 3}
@@ -653,6 +656,183 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 67db9e8f0e2ae9c40bc1e2b64352a6b4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Slider
+--- !u!1 &1022791773
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1022791775}
+  - component: {fileID: 1022791774}
+  - component: {fileID: 1022791776}
+  m_Layer: 0
+  m_Name: SoundManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1022791774
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1022791773}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b5401e0916a5424d85dc6e5d097b9fe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SoundManager
+  bossEffects:
+  - name: bossAscend
+    clip: {fileID: 8300000, guid: f5a43e00602e2b04c83d04330a739172, type: 3}
+    volume: 1
+    pitch: 1
+  - name: bossHit
+    clip: {fileID: 8300000, guid: ce9b4696c1f5e4a42b92701b3fae24fb, type: 3}
+    volume: 1
+    pitch: 1
+  - name: bossSwoosh
+    clip: {fileID: 8300000, guid: f23fdb6be075127458f76e96425efd8b, type: 3}
+    volume: 1
+    pitch: 1
+  - name: bossLaser
+    clip: {fileID: 8300000, guid: 5a2cce65faf215347a05d89e2e25c1d2, type: 3}
+    volume: 1
+    pitch: 1
+  playerEffects:
+  - name: playerHit
+    clip: {fileID: 8300000, guid: e8d46cd0069fd2f41b934c06fe2a2c97, type: 3}
+    volume: 1
+    pitch: 1
+  - name: playerProjectile
+    clip: {fileID: 8300000, guid: 26d40048cdb5cef438214af83cc23467, type: 3}
+    volume: 1
+    pitch: 1
+  starEffects:
+  - name: starEnter
+    clip: {fileID: 8300000, guid: b3999ae5f7d697641ae398b903d4c1f1, type: 3}
+    volume: 0.565
+    pitch: 1
+  - name: starMeeting
+    clip: {fileID: 8300000, guid: beda819174c67a948a1abc7a8ec16593, type: 3}
+    volume: 0.46
+    pitch: 1.25
+--- !u!4 &1022791775
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1022791773}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 3.91754, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!82 &1022791776
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1022791773}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 0}
+  m_PlayOnAwake: 1
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1001 &1116561529
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -983,6 +1163,7 @@ MonoBehaviour:
   offset: {x: 1, y: 1, z: 1}
   hoverSpeed: 3
   hoverHeight: 0.25
+  type: 0
 --- !u!1 &1677349503 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 6670819004200630327, guid: e59f752b7fe284b40aecb675322b0502, type: 3}
@@ -1216,6 +1397,7 @@ MonoBehaviour:
   offset: {x: -1.25, y: 1.5, z: 1}
   hoverSpeed: 3
   hoverHeight: 0.25
+  type: 0
 --- !u!1001 &1992504394
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2099,3 +2281,4 @@ SceneRoots:
   - {fileID: 6795217104191683348}
   - {fileID: 5554670026830983652}
   - {fileID: 7094936056609504987}
+  - {fileID: 1022791775}

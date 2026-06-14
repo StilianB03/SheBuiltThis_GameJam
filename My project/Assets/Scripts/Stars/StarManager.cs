@@ -25,6 +25,7 @@ public class StarManager : MonoBehaviour
 	private bool sequenceStarted = false;
 	private bool isOrbiting = false;
 	private float orbitTimer = 0f;
+	private SoundManager mySM;
 
 	//Orbit vars//
 	public float radius = 1.0f;
@@ -36,6 +37,8 @@ public class StarManager : MonoBehaviour
 		{
 			playerMaterial = playerRenderer.material;
 		}
+
+		mySM = UnityEngine.Object.FindFirstObjectByType<SoundManager>();
 	}
 
 	void Update()
@@ -111,6 +114,7 @@ public class StarManager : MonoBehaviour
 			);
 			yield return null;
 		}
+		mySM.PlayOnce("starEnter");
 
 		//Emission
 		currentIntensity += intensityIncrement;
