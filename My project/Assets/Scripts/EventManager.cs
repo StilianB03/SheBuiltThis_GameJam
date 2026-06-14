@@ -15,12 +15,36 @@ public class EventManager : MonoBehaviour
 
 	private IEnumerator ArenaSequence()
 	{
-		yield return new WaitForSeconds(0.5f);
+		GameObject[] fallingObjects = GameObject.FindGameObjectsWithTag("Fall");
+
+		List<GameObject> objectsToDestroy = new List<GameObject>();
+
+		foreach (GameObject obj in fallingObjects)
+		{
+			Rigidbody rb = obj.GetComponent<Rigidbody>();
+
+			if (rb != null)
+			{
+				rb.useGravity = true;
+			}
+
+			objectsToDestroy.Add(obj);
+		}
+
+		yield return new WaitForSeconds(3f);
+
+		foreach (GameObject obj in objectsToDestroy)
+		{
+			if (obj != null)
+			{
+				Destroy(obj);
+			}
+		}
 	}
 
 	private IEnumerator ShowHealthBars()
 	{
-		//shit falls
+		//shit UI
 		yield return new WaitForSeconds(0.5f);
 	}
 }

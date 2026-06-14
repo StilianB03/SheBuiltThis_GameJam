@@ -80,18 +80,15 @@ public class StarManager : MonoBehaviour
 
 		// Spawn Boss
 
-		Debug.Log(":(");
 		yield return new WaitUntil(() =>
 		myEM != null && myEM.arenaEntered); 
 
 		if (bossPrefab != null)
 		{
-			Debug.Log(":)");
 			myEM.TriggeredArenaEntered();
 			Vector3 spawnPos = new Vector3(0, bossSpawnY - 7.55f, 0);
 			Instantiate(bossPrefab, spawnPos, Quaternion.identity);
 		}
-		Debug.Log(":(");
 	}
 
 	private IEnumerator AbsorbSingleStar(StarCompanion star)
