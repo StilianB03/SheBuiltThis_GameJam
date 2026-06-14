@@ -47,6 +47,7 @@ public class BossController : MonoBehaviour
 	public float chargeDuration = 3.0f;
 	public float fadeDuration = 5.0f;
 	public float ascendSpeed = 7.0f;
+	public float ascendTime = 4.0f;
 
 	[Header("State Transition Chances ")]
 	[Range(0, 100)] public float normalToHidden = 50f;
@@ -491,7 +492,16 @@ public class BossController : MonoBehaviour
 			{
 				if (star != null) star.transform.SetParent(this.transform);
 			}
-			isAscending = true;
+
+			float ascendTimer = 0f;
+			while (ascendTimer < ascendTime)
+			{
+				isAscending = true;
+				ascendTimer += Time.deltaTime;
+				yield return null;
+			}
+
+			FindObjectOfType<AdvancedUIEventManager>().TriggerEndingSequence();
 		}
 	}
 

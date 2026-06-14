@@ -212,7 +212,16 @@ public class PlayerController : MonoBehaviour
 
 	private void Die()
 	{
-		Debug.Log("Its okay to die");
+		GameObject loaderObj = GameObject.Find("BossLoader");
+
+		if (loaderObj != null)
+		{
+			FlexibleSceneLoader loader = FindObjectOfType<FlexibleSceneLoader>();
+			if (loader != null)
+			{
+				loader.TriggerManualTransition();
+			}
+		}
 	}
 
 	// SHOOTING //
