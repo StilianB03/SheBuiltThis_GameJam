@@ -1133,7 +1133,7 @@ MonoBehaviour:
   cameraHeight: 6
   projectileData: {fileID: 11400000, guid: 6f5bbbb50b6bc394eadedba237151931, type: 2}
   shootPoint: {fileID: 1677349509}
-  fireRate: 1
+  fireRate: 5
   isFinalBoss: 0
 --- !u!54 &1677349506
 Rigidbody:
@@ -1744,6 +1744,10 @@ PrefabInstance:
     - target: {fileID: 225853996888200776, guid: 69e28af550c88fd48ac1e722c48a562b, type: 3}
       propertyPath: m_Value
       value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 387690288750379582, guid: 69e28af550c88fd48ac1e722c48a562b, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2119047045782910183, guid: 69e28af550c88fd48ac1e722c48a562b, type: 3}
       propertyPath: m_Name
