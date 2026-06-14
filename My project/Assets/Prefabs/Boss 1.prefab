@@ -267,7 +267,7 @@ MonoBehaviour:
   currentState: 0
   hitbox1: {fileID: 7627329237042145001}
   hitbox2: {fileID: 2334413437170192332}
-  maxHealth: 1000
+  maxHealth: 30
   currentHealth: 1000
   rotationSpeed: 3
   followPlayerOffsetAngle: 15
@@ -282,6 +282,11 @@ MonoBehaviour:
   maxUpTime: 7
   moveTime: 0.15
   maxMoveSpeed: 100
+  deathMaterial: {fileID: 2100000, guid: 255d8f4e6cf6d30428b04f8f0b289174, type: 2}
+  maxEmissionIntensity: 10000
+  baseEmissionIntensity: 1
+  chargeDuration: 3
+  fadeDuration: 5
   normalToHidden: 50
   normalToUp: 50
   upAttack1Chance: 50
@@ -296,6 +301,7 @@ MonoBehaviour:
   playerTransform: {fileID: 0}
   isAttacking: 0
   stateTimeExpired: 0
+  readyAscend: 0
 --- !u!136 &7627329237042145001
 CapsuleCollider:
   m_ObjectHideFlags: 0

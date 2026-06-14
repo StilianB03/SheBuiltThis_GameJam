@@ -223,7 +223,9 @@ MonoBehaviour:
   m_Label: Spawn System
   m_Data: {fileID: 8926484042661616971}
   m_InputFlowSlot:
-  - link: []
+  - link:
+    - context: {fileID: 8926484042661617825}
+      slotIndex: 0
   - link:
     - context: {fileID: 8926484042661617827}
       slotIndex: 0
@@ -2102,7 +2104,9 @@ MonoBehaviour:
   m_Label: Spawn System
   m_Data: {fileID: 8926484042661617607}
   m_InputFlowSlot:
-  - link: []
+  - link:
+    - context: {fileID: 8926484042661617825}
+      slotIndex: 0
   - link:
     - context: {fileID: 8926484042661617827}
       slotIndex: 0
@@ -3965,7 +3969,9 @@ MonoBehaviour:
   m_Label: Spawn System
   m_Data: {fileID: 8926484042661617676}
   m_InputFlowSlot:
-  - link: []
+  - link:
+    - context: {fileID: 8926484042661617825}
+      slotIndex: 0
   - link:
     - context: {fileID: 8926484042661617827}
       slotIndex: 0
@@ -5829,9 +5835,11 @@ MonoBehaviour:
   m_Data: {fileID: 8926484042661617740}
   m_InputFlowSlot:
   - link:
+    - context: {fileID: 8926484042661617825}
+      slotIndex: 0
+  - link:
     - context: {fileID: 8926484042661617827}
       slotIndex: 0
-  - link: []
   m_OutputFlowSlot:
   - link:
     - context: {fileID: 8926484042661617745}
@@ -8489,7 +8497,15 @@ MonoBehaviour:
   m_InputFlowSlot:
   - link: []
   m_OutputFlowSlot:
-  - link: []
+  - link:
+    - context: {fileID: 8926484042661616970}
+      slotIndex: 0
+    - context: {fileID: 8926484042661617606}
+      slotIndex: 0
+    - context: {fileID: 8926484042661617675}
+      slotIndex: 0
+    - context: {fileID: 8926484042661617739}
+      slotIndex: 0
   eventName: StartLaser
 --- !u!114 &8926484042661617826
 MonoBehaviour:
@@ -8538,13 +8554,13 @@ MonoBehaviour:
   - link: []
   m_OutputFlowSlot:
   - link:
-    - context: {fileID: 8926484042661617739}
-      slotIndex: 0
     - context: {fileID: 8926484042661617675}
       slotIndex: 1
     - context: {fileID: 8926484042661617606}
       slotIndex: 1
     - context: {fileID: 8926484042661616970}
+      slotIndex: 1
+    - context: {fileID: 8926484042661617739}
       slotIndex: 1
   eventName: StopLaser
 --- !u!114 &8926484042661617828

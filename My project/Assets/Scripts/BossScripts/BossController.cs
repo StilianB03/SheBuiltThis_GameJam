@@ -16,7 +16,7 @@ public class BossController : MonoBehaviour
 	public Collider hitbox2;
 
 	[Header("Health")]
-	public float maxHealth = 1000f;
+	public float maxHealth = 30f;
 	public float currentHealth = 1000f;
 
 	[Header("Rotation Settings")]
@@ -39,6 +39,14 @@ public class BossController : MonoBehaviour
 	[Header("Vertical Movement")]
 	public float moveTime = 0.15f;
 	public float maxMoveSpeed = 50f;
+
+	[Header("Death Settings")]
+	public Material deathMaterial;
+	public float maxEmissionIntensity = 100f;
+	public float baseEmissionIntensity = 1f; 
+	public float chargeDuration = 3.0f;
+	public float fadeDuration = 5.0f;
+	public float ascendDuration = 7.0f;
 
 	[Header("State Transition Chances ")]
 	[Range(0, 100)] public float normalToHidden = 50f;
@@ -70,7 +78,9 @@ public class BossController : MonoBehaviour
 	private float yVelocity; 
 	private float stateTimer;
 	private float targetHeight;
+
 	private bool isSpawning = true;
+	private bool shouldAscend = false;
 
 	private float laserSpinLeft = 0f;
 	public static event Action<float, float> OnHealthChanged;
@@ -92,7 +102,8 @@ public class BossController : MonoBehaviour
 			laserTriggerCollider.SetActive(false);
 
 		if (laserVfx != null)
-			laserVfx.Stop();
+			laserVfx.SendEvent("StopLaser"); 
+			laserVfx.Reinit();
 
 		currentHealth = maxHealth;
 		OnHealthChanged?.Invoke(currentHealth, maxHealth);
@@ -295,7 +306,7 @@ public class BossController : MonoBehaviour
 		spinDirection = (UnityEngine.Random.value > 0.5f) ? 1f : -1f;
 
 		if (laserVfx != null)
-			laserVfx.Play();
+			laserVfx.SendEvent("StartLaser");
 
 		if (laserTriggerCollider != null)
 			laserTriggerCollider.SetActive(true);
@@ -338,8 +349,7 @@ public class BossController : MonoBehaviour
 
 						if (laserVfx != null)
 							laserVfx.SendEvent("StopLaser");
-							laserVfx.Stop();
-
+							laserVfx.Reinit();
 						OnAttackComplete();
 					}
 				}
@@ -377,7 +387,96 @@ public class BossController : MonoBehaviour
 
 	private void Die()
 	{
-		Debug.Log("Boss dead??");
+		StopAllCoroutines();
+		isAttacking = false;
+		isSpawning = true;
+
+		if (hitbox1) hitbox1.enabled = false;
+		if (hitbox2) hitbox2.enabled = false;
+
+		StartCoroutine(DeathSequence());
+	}
+
+	private IEnumerator DeathSequence()
+	{
+		List<Renderer> validRenderers = new();
+
+		foreach (Renderer r in GetComponentsInChildren<Renderer>())
+		{
+			if (r.GetComponent<VisualEffect>() == null)
+				validRenderers.Add(r);
+		}
+
+		if (laserVfx != null) 
+			laserVfx.SendEvent("StopLaser"); 
+			laserVfx.Reinit();
+		if (laserTriggerCollider != null) laserTriggerCollider.SetActive(false);
+
+		float elapsed = 0f;
+		//Increase
+		while (elapsed < chargeDuration)
+		{
+			HandleRotation();
+			elapsed += Time.deltaTime;
+			float t = elapsed / chargeDuration;
+			float currentIntensity = Mathf.Lerp(baseEmissionIntensity, maxEmissionIntensity, t);
+
+			foreach (Renderer r in validRenderers)
+			{
+				r.material.SetFloat("_emissive", currentIntensity);
+			}
+			yield return null;
+		}
+
+		//Material Swap
+		if (deathMaterial != null)
+		{
+			foreach (Renderer r in validRenderers)
+			{
+				r.material = deathMaterial;
+				Debug.Log(r.material == deathMaterial);
+				r.material.SetFloat("_emissive", maxEmissionIntensity);
+			}
+		}
+
+		//Fade down and rise
+		elapsed = 0f;
+
+		Vector3 startPos = transform.position;
+		Vector3 risePos = startPos + new Vector3(0, 15f, 0);
+
+		while (elapsed < fadeDuration)
+		{
+			HandleRotation();
+			elapsed += Time.deltaTime;
+			float t = elapsed / fadeDuration;
+
+			float currentIntensity =
+				Mathf.Lerp(maxEmissionIntensity, baseEmissionIntensity, t);
+
+			foreach (Renderer r in validRenderers)
+			{
+				r.material.SetFloat("_emissive", currentIntensity);
+			}
+
+			yield return null;
+		}
+
+		elapsed = 0f;
+		if (shouldAscend) {
+			while (elapsed < ascendDuration)
+			{
+				HandleRotation();
+				elapsed += Time.deltaTime;
+				float t = elapsed / 2f;
+
+				transform.position =
+					Vector3.Lerp(startPos, risePos, t);
+
+				yield return null;
+			}
+			Destroy(gameObject);
+		}
 	}
 
 	//ENTRANCE ANIM//
