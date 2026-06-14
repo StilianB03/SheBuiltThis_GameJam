@@ -25,7 +25,9 @@ public class StarManager : MonoBehaviour
 	private bool sequenceStarted = false;
 	private bool isOrbiting = false;
 	private float orbitTimer = 0f;
+
 	private SoundManager mySM;
+	private EventManager myEM;
 
 	//Orbit vars//
 	public float radius = 1.0f;
@@ -39,6 +41,7 @@ public class StarManager : MonoBehaviour
 		}
 
 		mySM = UnityEngine.Object.FindFirstObjectByType<SoundManager>();
+		myEM = UnityEngine.Object.FindFirstObjectByType<EventManager>();
 	}
 
 	void Update()
@@ -76,12 +79,19 @@ public class StarManager : MonoBehaviour
 		}
 
 		// Spawn Boss
-		yield return new WaitForSeconds(1.0f);
+
+		Debug.Log(":(");
+		yield return new WaitUntil(() =>
+		myEM != null && myEM.arenaEntered); 
+
 		if (bossPrefab != null)
 		{
+			Debug.Log(":)");
+			myEM.TriggeredArenaEntered();
 			Vector3 spawnPos = new Vector3(0, bossSpawnY - 7.55f, 0);
 			Instantiate(bossPrefab, spawnPos, Quaternion.identity);
 		}
+		Debug.Log(":(");
 	}
 
 	private IEnumerator AbsorbSingleStar(StarCompanion star)

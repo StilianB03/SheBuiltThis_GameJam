@@ -67,6 +67,7 @@ public class BossController : MonoBehaviour
 	public int maxRotationCount = 3;
 	private float spinDirection = 1f;
 	public GameObject laserTriggerCollider; 
+	public Transform laserPivot;
 	private Renderer laserRend;
 
 
@@ -86,6 +87,9 @@ public class BossController : MonoBehaviour
 	private float stateTimer;
 	private float targetHeight;
 
+	private bool isAiming = true;
+	private float aimTimer = 0f;
+
 	private bool isSpawning = true;
 	public bool shouldAscend = false;
 	public bool isAscending = false;
@@ -98,7 +102,7 @@ public class BossController : MonoBehaviour
     {
 		if (laserRend == null)
 		{
-			laserRend = transform.Find("LaserTriggerObj").GetComponent<Renderer>();
+			laserRend = transform.Find("LaserPivot/LaserTriggerObj").GetComponent<Renderer>();
 			Debug.Log(laserRend);
 		}
 
@@ -332,6 +336,9 @@ public class BossController : MonoBehaviour
 	void TriggerLaserAttack()
 	{
 		currentAttack = BossAttack.LaserSpin; 
+		
+		isAiming = true;
+		aimTimer = 0f;
 
 		int rotations = UnityEngine.Random.Range(minRotationCount, maxRotationCount + 1);
 		laserSpinLeft = rotations * 360f;
@@ -368,17 +375,31 @@ public class BossController : MonoBehaviour
 			case BossAttack.LaserSpin:
 				if (laserSpinLeft > 0f)
 				{
-					float step = laserRotationSpeed * Time.fixedDeltaTime;
-					transform.Rotate(0f, step * spinDirection, 0f);
-					laserSpinLeft -= step;
-
-					if (laserSpinLeft <= 0f)
+					if (isAiming)
 					{
-						mySM.StopLooping();
-						if (laserRend != null) laserRend.enabled = false;
-						if (laserTriggerCollider != null) laserTriggerCollider.SetActive(false);
-						OnAttackComplete();
+						Vector3 dirToPlayer = playerTransform.position - laserPivot.position;
+						float targetPitch = Mathf.Atan2(dirToPlayer.y, new Vector3(dirToPlayer.x, 0, dirToPlayer.z).magnitude) * Mathf.Rad2Deg;
+						laserPivot.localRotation = Quaternion.Euler(-targetPitch, 0, 0);
+
+						aimTimer += Time.fixedDeltaTime;
+						if (aimTimer >= 0.75f) 
+						{
+							isAiming = false;
+						}
 					}
+					else
+					{
+						float step = laserRotationSpeed * Time.fixedDeltaTime;
+						transform.Rotate(0f, step * spinDirection, 0f);
+						laserSpinLeft -= step;
+					}
+				}
+				else
+				{
+					mySM.StopLooping();
+					if (laserRend != null) laserRend.enabled = false;
+					if (laserTriggerCollider != null) laserTriggerCollider.SetActive(false);
+					OnAttackComplete();
 				}
 				break;
 
@@ -549,5 +570,13 @@ public class BossController : MonoBehaviour
 
 		transform.position = endPos;
 		isSpawning = false;
+	}
+
+	private IEnumerator PointLaserToPlayer()
+	{
+		Vector3 dirToPlayer = playerTransform.position - laserPivot.position;
+		float targetPitch = Mathf.Atan2(dirToPlayer.y, new Vector3(dirToPlayer.x, 0, dirToPlayer.z).magnitude) * Mathf.Rad2Deg;
+		laserPivot.localRotation = Quaternion.Euler(-targetPitch, 0, 0);
+		yield return null;
 	}
 }

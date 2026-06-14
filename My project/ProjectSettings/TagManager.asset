@@ -6,6 +6,7 @@ TagManager:
   tags:
   - BossLoader
   - EndLoader
+  - Fall
   layers:
   - Default
   - TransparentFX
