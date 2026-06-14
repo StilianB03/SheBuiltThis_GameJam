@@ -16,29 +16,39 @@ public class EventManager : MonoBehaviour
 	private IEnumerator ArenaSequence()
 	{
 		GameObject[] fallingObjects = GameObject.FindGameObjectsWithTag("Fall");
-
 		List<GameObject> objectsToDestroy = new List<GameObject>();
+
+		// Store starting positions
+		Dictionary<GameObject, Vector3> startPositions = new Dictionary<GameObject, Vector3>();
 
 		foreach (GameObject obj in fallingObjects)
 		{
-			Rigidbody rb = obj.GetComponent<Rigidbody>();
-
-			if (rb != null)
-			{
-				rb.useGravity = true;
-			}
-
+			startPositions[obj] = obj.transform.position;
 			objectsToDestroy.Add(obj);
 		}
 
-		yield return new WaitForSeconds(3f);
+		float duration = 4.0f; 
+		float elapsed = 0f;
+		float fallDistance = 25f; 
 
+		while (elapsed < duration)
+		{
+			foreach (GameObject obj in objectsToDestroy)
+			{
+				if (obj != null)
+				{
+					Vector3 targetPos = startPositions[obj] - new Vector3(0, fallDistance, 0);
+					obj.transform.position = Vector3.Lerp(startPositions[obj], targetPos, elapsed / duration);
+				}
+			}
+			elapsed += Time.deltaTime;
+			yield return null;
+		}
+
+		yield return new WaitForSeconds(1f);
 		foreach (GameObject obj in objectsToDestroy)
 		{
-			if (obj != null)
-			{
-				Destroy(obj);
-			}
+			if (obj != null) Destroy(obj);
 		}
 	}
 
