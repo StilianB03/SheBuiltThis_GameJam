@@ -67,7 +67,7 @@ public class BossController : MonoBehaviour
 	public int maxRotationCount = 3;
 	private float spinDirection = 1f;
 	public GameObject laserTriggerCollider; 
-	public VisualEffect laserVfx;
+	private Renderer laserRend;
 
 	[Header("References")]
 	public Transform playerTransform;
@@ -90,8 +90,14 @@ public class BossController : MonoBehaviour
 	// START //
 	void Start()
     {
-        //Ensure we find player
-        if (playerTransform == null) {
+		if (laserRend == null)
+		{
+			laserRend = transform.Find("LaserTriggerObj").GetComponent<Renderer>();
+			Debug.Log(laserRend);
+		}
+
+		//Ensure we find player
+		if (playerTransform == null) {
 			PlayerController playerScript = UnityEngine.Object.FindFirstObjectByType<PlayerController>();
 
 			if (playerScript != null)
@@ -100,12 +106,13 @@ public class BossController : MonoBehaviour
 			}
 		}
 
-		if (laserTriggerCollider != null)
-			laserTriggerCollider.SetActive(false);
+		if (laserTriggerCollider != null) {
 
-		if (laserVfx != null)
-			laserVfx.SendEvent("StopLaser"); 
-			laserVfx.Reinit();
+			laserTriggerCollider.SetActive(false);
+			if (laserRend != null) 
+				laserRend.enabled = true;
+		}
+
 
 		currentHealth = maxHealth;
 		OnHealthChanged?.Invoke(currentHealth, maxHealth);
@@ -313,11 +320,8 @@ public class BossController : MonoBehaviour
 		laserSpinLeft = rotations * 360f;
 		spinDirection = (UnityEngine.Random.value > 0.5f) ? 1f : -1f;
 
-		if (laserVfx != null)
-			laserVfx.SendEvent("StartLaser");
-
-		if (laserTriggerCollider != null)
-			laserTriggerCollider.SetActive(true);
+		if (laserRend != null) laserRend.enabled = true; 
+		if (laserTriggerCollider != null) laserTriggerCollider.SetActive(true);
 	}
 
 	void TriggerNormalAttack2()
@@ -352,12 +356,8 @@ public class BossController : MonoBehaviour
 
 					if (laserSpinLeft <= 0f)
 					{
-						if (laserTriggerCollider != null)
-							laserTriggerCollider.SetActive(false);
-
-						if (laserVfx != null)
-							laserVfx.SendEvent("StopLaser");
-							laserVfx.Reinit();
+						if (laserRend != null) laserRend.enabled = false;
+						if (laserTriggerCollider != null) laserTriggerCollider.SetActive(false);
 						OnAttackComplete();
 					}
 				}
@@ -417,9 +417,8 @@ public class BossController : MonoBehaviour
 				validRenderers.Add(r);
 		}
 
-		if (laserVfx != null) 
-			laserVfx.SendEvent("StopLaser"); 
-			laserVfx.Reinit();
+		
+		if (laserRend != null) laserRend.enabled = false; 
 		if (laserTriggerCollider != null) laserTriggerCollider.SetActive(false);
 
 		float elapsed = 0f;
