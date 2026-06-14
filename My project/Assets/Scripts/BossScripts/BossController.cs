@@ -385,6 +385,8 @@ public class BossController : MonoBehaviour
 		}
 	}
 
+
+	// DEATH SEQUENCE //
 	private void Die()
 	{
 		StopAllCoroutines();
@@ -434,7 +436,6 @@ public class BossController : MonoBehaviour
 			foreach (Renderer r in validRenderers)
 			{
 				r.material = deathMaterial;
-				Debug.Log(r.material == deathMaterial);
 				r.material.SetFloat("_emissive", maxEmissionIntensity);
 			}
 		}

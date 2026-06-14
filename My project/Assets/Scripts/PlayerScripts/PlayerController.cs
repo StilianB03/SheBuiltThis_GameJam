@@ -33,7 +33,10 @@ public class PlayerController : MonoBehaviour
 
 	[Header("Shooting Settings")]
 	public ProjectileData projectileData;
-	public Transform shootPoint;
+	public Transform shootPoint; 
+	public float fireRate = 0.75f;
+	private float lastFireTime;
+	private bool isShootingHeld = false;
 	private InputAction shootAction;
 
 	private InputAction moveAction;
@@ -77,9 +80,20 @@ public class PlayerController : MonoBehaviour
 	void Update()
 	{
 		if (moveAction == null || cameraTransform == null || centerPoint == null) return;
-
-		//Get Input
 		moveInput = moveAction.ReadValue<Vector2>();
+
+		if (isShootingHeld)
+		{
+			if (lastFireTime == 0f || Time.time >= lastFireTime + fireRate)
+			{
+				Shoot();
+				lastFireTime = Time.time;
+			}
+		}
+		else
+		{
+			lastFireTime = 0f;
+		}
 
 		HandleJump();
 		HandleCameraAndRotation();
@@ -221,7 +235,8 @@ public class PlayerController : MonoBehaviour
 	{
 		if (shootAction != null)
 		{
-			shootAction.performed += OnShootPerformed;
+			shootAction.started += ctx => isShootingHeld = true;
+			shootAction.canceled += ctx => isShootingHeld = false;
 			shootAction.Enable();
 		}
 	}
@@ -230,13 +245,9 @@ public class PlayerController : MonoBehaviour
 	{
 		if (shootAction != null)
 		{
-			shootAction.performed -= OnShootPerformed;
+			shootAction.started -= ctx => isShootingHeld = true;
+			shootAction.canceled -= ctx => isShootingHeld = false;
 			shootAction.Disable();
 		}
-	}
-
-	private void OnShootPerformed(InputAction.CallbackContext ctx)
-	{
-		Shoot();
 	}
 }
